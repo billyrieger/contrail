@@ -1,0 +1,7 @@
+[workspace]
+
+members = [
+    "contrail",
+    "contrail-collections",
+    "contrail-derive",
+]
