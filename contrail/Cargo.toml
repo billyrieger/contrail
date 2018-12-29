@@ -5,3 +5,7 @@ authors = ["Billy Rieger <wrieger@protonmail.com>"]
 edition = "2018"
 
 [dependencies]
+contrail-derive = { path = "../contrail-derive/" }
+
+[dev-dependencies]
+rand = "0.6.1"
