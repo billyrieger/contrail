@@ -5,7 +5,7 @@
 //! Low-level memory management.
 use std::{fmt, marker::PhantomData};
 
-/// Anything that can be converted to/from a fixed-length byte slice.
+/// Anything that can be converted to or from a fixed-length byte slice.
 ///
 /// In theory, there could be a blanket implementation of `Bytes` for types
 /// that are `Copy + 'static`. Unfortunately such an implementation is
@@ -22,10 +22,11 @@ use std::{fmt, marker::PhantomData};
 ///
 /// # Deriving `Bytes`
 ///
-/// Despite the fact that `Bytes` is only implemented for primitive types,
-/// `Bytes` can still be derived on custom data types using `#[derive(Bytes)]`.
+/// `Bytes` can be derived on custom data types with `#[derive(Bytes)]`.
 /// To use this feature, `#[macro_use] extern crate contrail` must be in the
 /// crate root.
+///
+/// Since `Bytes: Copy`, it's usually necessary to derive `Clone` and `Copy` as well.
 ///
 /// ```
 /// # #[macro_use] extern crate contrail;
@@ -76,16 +77,6 @@ use std::{fmt, marker::PhantomData};
 /// }
 /// ```
 ///
-/// # Using `Bytes`
-///
-/// In terms of unsafety, the `write_bytes` method is fairly innocuous.
-/// As long as the caller ensures that the byte slice is the correct length,
-/// not much can go wrong.
-///
-/// `read_bytes`, on the other hand, is very dangerous. Supplying the method
-/// with a byte slice that represents an invalid value will result in undefined
-/// behavior. Be careful to not let this happen.
-///
 /// # Examples
 ///
 /// ```
@@ -118,18 +109,18 @@ pub trait Bytes: Copy + 'static {
 
 /// A fixed-size chunk of bytes that can be accessed and updated using pointers.
 ///
-/// `Memory` contains no methods itself.
+/// `Memory` has no methods itself.
 /// All operations that read from or write to the memory are performed using
 /// pointers. See the documentation for [`Pointer`](crate::mem::Pointer)
 /// and [`ArrayPointer`](crate::mem::ArrayPointer) for more details.
 ///
-/// To create a `Memory`, use a [`MemoryBuilder`](crate::mem::MemoryBuilder).
+/// To create `Memory`, use a [`MemoryBuilder`](crate::mem::MemoryBuilder).
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Memory {
     bytes: Vec<u8>,
 }
 
-/// A growable chunk of bytes that can be built into a `Memory`.
+/// A growable chunk of bytes that can be built into `Memory`.
 #[derive(Debug, Default, Eq, PartialEq)]
 pub struct MemoryBuilder {
     bytes: Vec<u8>,
@@ -158,7 +149,7 @@ impl MemoryBuilder {
     }
 }
 
-/// A reference to a value in memory.
+/// A reference to a value in `Memory`.
 pub struct Pointer<T> {
     offset: usize,
     phantom: PhantomData<T>,
@@ -170,7 +161,7 @@ where
 {
     /// Creates a new pointer to the given value in memory.
     ///
-    /// The pointer is only usable after the `MemoryBuilder` is finished and a
+    /// The pointer is only usable after the `MemoryBuilder` is finished and
     /// `Memory` is created.
     pub fn new(builder: &mut MemoryBuilder, val: T) -> Self {
         let offset = builder.bytes.len();
@@ -258,9 +249,7 @@ where
     /// ```
     #[inline(always)]
     pub fn update(self, memory: &mut Memory, f: impl FnOnce(T) -> T) {
-        // TODO: rewrite once NLL is stable
-        let new_val = f(self.get(memory));
-        self.set(memory, new_val);
+        self.set(memory, f(self.get(memory)));
     }
 }
 
@@ -340,6 +329,9 @@ where
         self.len == 0
     }
 
+    /// Gets the value of the given index of the array pointer from memory.
+    ///
+    /// # Examples
     #[inline(always)]
     pub fn get(&self, memory: &Memory, i: usize) -> T {
         assert!(i < self.len);
@@ -353,6 +345,9 @@ where
         }
     }
 
+    /// Sets the value of the given index of the array pointer in memory.
+    ///
+    /// # Examples
     #[inline(always)]
     pub fn set(&self, memory: &mut Memory, i: usize, val: T) {
         assert!(i < self.len);
@@ -366,19 +361,21 @@ where
         }
     }
 
+    /// Updates the value of the given index in memory using the given function.
+    ///
+    /// # Examples
     #[inline(always)]
     pub fn update(&self, memory: &mut Memory, i: usize, f: impl FnOnce(T) -> T) {
-        // TODO: improve once NLL is stable
-        let new_val = f(self.get(memory, i));
-        self.set(memory, i, new_val);
+        self.set(memory, i, f(self.get(memory, i)));
     }
 
+    /// Swaps the values in memory of two indices of the array pointer.
+    ///
+    /// # Examples
     #[inline(always)]
     pub fn swap(&self, memory: &mut Memory, i: usize, j: usize) {
-        // TODO: improve once NLL is stable
         let temp_i = self.get(memory, i);
-        let temp_j = self.get(memory, j);
-        self.set(memory, i, temp_j);
+        self.set(memory, i, self.get(memory, j));
         self.set(memory, j, temp_i);
     }
 }
@@ -412,34 +409,25 @@ impl<T> PartialEq for ArrayPointer<T> {
     }
 }
 
-macro_rules! n_bytes {
-    ( $T:ty ) => {
-        // TODO: remove leading colons with Rust 2018 edition
-        ::std::mem::size_of::<$T>()
-    };
-}
-
 macro_rules! impl_bytes_primitive {
     ( $( $T:ty ),* , ) => {
         $(
             impl Bytes for $T {
-                const LENGTH: usize = n_bytes!($T);
+                const LENGTH: usize = std::mem::size_of::<$T>();
 
                 #[inline(always)]
                 unsafe fn read_bytes(bytes: &[u8]) -> $T {
                     // safe assuming that the length of the byte slice is Self::LENGTH.
                     // this is up to the caller.
-                    let byte_array = *(bytes.as_ptr() as *const [u8; n_bytes!($T)]);
+                    let byte_array = *(bytes.as_ptr() as *const [u8; std::mem::size_of::<$T>()]);
                     // safe assuming that the byte slice represents a valid value of type T.
-                    // TODO: remove leading colons with Rust 2018 edition
-                    ::std::mem::transmute::<[u8; n_bytes!($T)], $T>(byte_array)
+                    std::mem::transmute::<[u8; std::mem::size_of::<$T>()], $T>(byte_array)
                 }
 
                 #[inline(always)]
                 unsafe fn write_bytes(self, bytes: &mut [u8]) {
                     // safe for Copy + 'static types
-                    // TODO: remove leading colons with Rust 2018 edition
-                    let byte_array = ::std::mem::transmute::<$T, [u8; n_bytes!($T)]>(self);
+                    let byte_array = std::mem::transmute::<$T, [u8; std::mem::size_of::<$T>()]>(self);
                     // safe assuming that the length of the byte slice is Self::LENGTH.
                     bytes.copy_from_slice(&byte_array);
                 }
@@ -461,11 +449,10 @@ impl_bytes_primitive! {
 mod tests {
     use super::*;
 
-    const N_BYTES_TESTS: usize = 10;
+    const TRIALS: usize = 100;
     const SEED: [u8; 32] = [42; 32];
 
-    // repeatedly verifies that a random value can be written to a byte slice
-    // and then read from the byte slice.
+    // repeatedly verifies that a random value can be written to and read from a byte slice
     macro_rules! test_bytes {
         ( $( [ $T:ty, $test_fn:ident ], )* ) => {
             mod read_write_bytes {
@@ -474,13 +461,13 @@ mod tests {
                 $(
                     #[test]
                     fn $test_fn() {
-                        use rand::{Rng, SeedableRng, rngs::{StdRng}};
+                        use rand::{Rng, SeedableRng, rngs::StdRng};
 
                         let mut rng = StdRng::from_seed(SEED);
 
-                        for _ in 0..N_BYTES_TESTS {
+                        for _ in 0..TRIALS {
                             let val = rng.gen::<$T>();
-                            let mut bytes = [0; n_bytes!($T)];
+                            let mut bytes = [0u8; std::mem::size_of::<$T>()];
                             unsafe {
                                 val.write_bytes(&mut bytes);
                             }

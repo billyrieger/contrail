@@ -2,102 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-//! State management for backtracking search algorithms.
-//!
-//! # Motivation
-//!
-//! As an illustrative example, consider a recursive search
-//! algorithm that looks for a solution to some unspecified problem by
-//! exploring a binary tree of possible states:
-//!
-//! ```
-//! trait SearchState: Clone {
-//!     fn solution_status(&self) -> Option<bool>;
-//!     fn branch_left(&mut self);
-//!     fn branch_right(&mut self);
-//! }
-//!
-//! // returns `true` if at least one solution exists, and `false` otherwise.
-//! fn search(state: impl SearchState) -> bool {
-//!     match state.solution_status() {
-//!         Some(is_solution) => is_solution,
-//!         None => {
-//!             let mut left = state.clone();
-//!             left.branch_left();
-//!             if search(left) {
-//!                 return true;
-//!             }
-//!
-//!             let mut right = state;
-//!             right.branch_right();
-//!             if search(right) {
-//!                 return true;
-//!             }
-//!
-//!             false
-//!         }
-//!     }
-//! }
-//! ```
-//!
-//! The main issue with this implementation is the line `let mut left =
-//! state.clone()`. The clone is necessary because the methods `branch_left`
-//! and `branch_right` both mutably modify the search state.
-//! If the search state is large in memory, cloning the entire state at
-//! each branch point could be expensive and slow down the search.
-//!
-//! `contrail` solves this problem by providing a framework for only cloning
-//! the relevant parts of the search state at each branch point.
-//! To enable this, all state is stored on an object called the _trail_.
-//! Here's what the same search procedure looks like using `contrail`:
-//!
-//! ```
-//! use contrail::Trail;
-//!
-//! trait SearchState {
-//!     fn solution_status(&self, trail: &Trail) -> Option<bool>;
-//!     fn branch_left(&self, trail: &mut Trail);
-//!     fn branch_right(&self, trail: &mut Trail);
-//! }
-//!
-//! // returns `true` if at least one solution exists, and `false` otherwise.
-//! fn search(trail: &mut Trail, state: &impl SearchState) -> bool {
-//!     match state.solution_status(trail) {
-//!         Some(is_solution) => is_solution,
-//!         None => {
-//!             trail.new_level();
-//!             state.branch_left(trail);
-//!             if search(trail, state) {
-//!                 return true;
-//!             }
-//!             trail.backtrack();
-//!
-//!             trail.new_level();
-//!             state.branch_right(trail);
-//!             if search(trail, state) {
-//!                 return true;
-//!             }
-//!             trail.backtrack();
-//!
-//!             false
-//!         }
-//!     }
-//! }
-//! ```
-//!
-//! Some key differences from the original example:
-//!
-//! - Functions and methods take a reference to a `Trail` as their first
-//! parameter. This is extremely common in `contrail` since the trail stores
-//! the entire state.
-//!
-//! - `branch_left` and `branch_right` no longer require `&mut self`, since the
-//! search state is stored on the trail.
-//!
-//! - In the `search` function, instead of cloning the search state,
-//! a new level is pushed onto the trail before the state is modified.
-//! Once the recursive sub-search is complete, the state is restored to
-//! when the new level was added.
+//! Simple state management for backtracking search algorithms.
 #[allow(unused_imports)]
 #[macro_use]
 extern crate contrail_derive;
@@ -105,24 +10,16 @@ extern crate contrail_derive;
 pub use contrail_derive::*;
 
 pub mod mem;
+pub mod storage;
 
 use std::marker::PhantomData;
 
-use self::mem::{ArrayPointer, Bytes, Memory, MemoryBuilder, Pointer};
+use crate::mem::{ArrayPointer, Bytes, Memory, MemoryBuilder, Pointer};
+use crate::storage::{Stable, Trailed, StorageMode}; 
 
 /// The trail itself.
 ///
-/// A `Trail`
-///
-/// # Creating a trail
-///
-/// The only way to create a trail is using a `TrailBuilder`.
-/// See [its documentation](crate::TrailBuilder) for more.
-///
 /// # Examples
-///
-/// The difference between trailed memory and stable memory is demonstrated by
-/// the following example:
 ///
 /// ```
 /// use contrail::{StableValue, TrailBuilder, TrailedValue};
@@ -265,55 +162,6 @@ impl Trail {
     }
 }
 
-/// Trait representing how something is stored on the trail.
-pub trait StorageMode {
-    fn builder_mut(builder: &mut TrailBuilder) -> &mut MemoryBuilder;
-    fn memory(trail: &Trail) -> &Memory;
-    fn memory_mut(trail: &mut Trail) -> &mut Memory;
-}
-
-/// Objects stored on the trail in trailed memory.
-#[derive(Clone, Copy)]
-pub struct Trailed;
-
-impl StorageMode for Trailed {
-    #[inline(always)]
-    fn builder_mut(builder: &mut TrailBuilder) -> &mut MemoryBuilder {
-        &mut builder.trailed_mem
-    }
-
-    #[inline(always)]
-    fn memory(trail: &Trail) -> &Memory {
-        &trail.trailed_mem
-    }
-
-    #[inline(always)]
-    fn memory_mut(trail: &mut Trail) -> &mut Memory {
-        &mut trail.trailed_mem
-    }
-}
-
-/// Objects stored on the trail in stable memory.
-#[derive(Clone, Copy)]
-pub struct Stable;
-
-impl StorageMode for Stable {
-    #[inline(always)]
-    fn builder_mut(builder: &mut TrailBuilder) -> &mut MemoryBuilder {
-        &mut builder.stable_mem
-    }
-
-    #[inline(always)]
-    fn memory(trail: &Trail) -> &Memory {
-        &trail.stable_mem
-    }
-
-    #[inline(always)]
-    fn memory_mut(trail: &mut Trail) -> &mut Memory {
-        &mut trail.stable_mem
-    }
-}
-
 /// A builder to create a `Trail`.
 pub struct TrailBuilder {
     trailed_mem: MemoryBuilder,
@@ -411,6 +259,7 @@ where
     ///
     /// trailed.update(&mut trail, |x| x * x);
     /// assert_eq!(trailed.get(&trail), 25);
+    /// ```
     #[inline(always)]
     pub fn update(self, trail: &mut Trail, f: impl FnOnce(T) -> T) {
         self.pointer.update(M::memory_mut(trail), f);
@@ -430,9 +279,8 @@ impl<M, T> Copy for Value<M, T> {}
 
 /// A reference to a fixed-length array of values stored on the trail.
 ///
-/// How the value is stored on the trail depends on the type parameter `M`.
-/// A `ArrayValue<Trailed, T>` is stored in trailed memory,
-/// whereas a `ArrayValue<Stable, T>` is stored in stable memory.
+/// An `ArrayValue<Trailed, T>` is stored on the trail in trailed memory,
+/// whereas an `ArrayValue<Stable, T>` is stored on the trail in stable memory.
 pub struct Array<M, T> {
     pointer: ArrayPointer<T>,
     phantom: PhantomData<M>,
