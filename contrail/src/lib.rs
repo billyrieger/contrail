@@ -15,7 +15,7 @@ pub mod storage;
 use std::marker::PhantomData;
 
 use crate::mem::{ArrayPointer, Bytes, Memory, MemoryBuilder, Pointer};
-use crate::storage::{Stable, Trailed, StorageMode}; 
+use crate::storage::{Stable, StorageMode, Trailed};
 
 /// The trail itself.
 ///
@@ -214,10 +214,10 @@ where
     /// # Examples
     ///
     /// ```
-    /// use contrail::{Stable, TrailBuilder, Value};
+    /// use contrail::{TrailBuilder, TrailedValue};
     ///
     /// let mut builder = TrailBuilder::new();
-    /// let stable = Value::<Stable, _>::new(&mut builder, 5);
+    /// let stable = TrailedValue::new(&mut builder, 5);
     /// let mut trail = builder.finish();
     ///
     /// assert_eq!(stable.get(&trail), 5);
@@ -232,7 +232,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use contrail::{Trail, TrailBuilder, TrailedValue};
+    /// use contrail::{TrailBuilder, TrailedValue};
     ///
     /// let mut builder = TrailBuilder::new();
     /// let trailed = TrailedValue::new(&mut builder, 5);
@@ -246,12 +246,12 @@ where
         self.pointer.set(M::memory_mut(trail), new_val);
     }
 
-    /// Updates the value on the trail.
+    /// Updates the value on the trail using the given function.
     ///
     /// # Examples
     ///
     /// ```
-    /// use contrail::{Trail, TrailBuilder, TrailedValue};
+    /// use contrail::{TrailBuilder, TrailedValue};
     ///
     /// let mut builder = TrailBuilder::new();
     /// let trailed = TrailedValue::new(&mut builder, 5);
@@ -306,16 +306,29 @@ where
         self.pointer.len()
     }
 
+    /// Gets the value of the array at the given index.
     #[inline(always)]
     pub fn get(&self, trail: &Trail, i: usize) -> T {
         self.pointer.get(M::memory(trail), i)
     }
 
+    /// Sets the value of the array at the given index.
     #[inline(always)]
     pub fn set(&self, trail: &mut Trail, i: usize, new_val: T) {
         self.pointer.set(M::memory_mut(trail), i, new_val);
     }
 
+    /// Updates the value of the array at the given index using the given update function.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use contrail::{Trail, TrailBuilder, TrailedArray};
+    ///
+    /// let mut builder = TrailBuilder::new();
+    /// let array = TrailedArray::new(&mut builder, 0..10);
+    /// let mut trail = builder.finish();
+    /// ```
     #[inline(always)]
     pub fn update(&self, trail: &mut Trail, i: usize, f: impl FnOnce(T) -> T) {
         self.pointer.update(M::memory_mut(trail), i, f);
@@ -338,16 +351,16 @@ impl<M, T> Clone for Array<M, T> {
 
 impl<M, T> Copy for Array<M, T> {}
 
-/// A value stored in trailed memory.
+/// A value stored on the trail in trailed memory.
 pub type TrailedValue<T> = Value<Trailed, T>;
 
-/// A value stored in stable memory.
+/// A value stored on the trail in stable memory.
 pub type StableValue<T> = Value<Stable, T>;
 
-/// A fixed-length array stored in trailed memory.
+/// A fixed-length array stored on the trail in trailed memory.
 pub type TrailedArray<T> = Array<Trailed, T>;
 
-/// A fixed-length array stored in stable memory.
+/// A fixed-length array stored on the trail in stable memory.
 pub type StableArray<T> = Array<Stable, T>;
 
 #[cfg(test)]
