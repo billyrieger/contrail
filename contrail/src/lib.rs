@@ -14,8 +14,10 @@ pub mod storage;
 
 use std::marker::PhantomData;
 
-use crate::mem::{ArrayPointer, Bytes, Memory, MemoryBuilder, Pointer};
-use crate::storage::{Stable, StorageMode, Trailed};
+use crate::{
+    mem::{ArrayPointer, Bytes, Memory, MemoryBuilder, Pointer},
+    storage::{Stable, StorageMode, Trailed},
+};
 
 /// The trail itself.
 ///
