@@ -33,13 +33,17 @@ pub fn bytes_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
             #[inline(always)]
             unsafe fn read_bytes(bytes: &[u8]) -> #name {
+                // safe assuming that the length of the byte slice is Self::LENGTH.
                 let byte_array = *(bytes.as_ptr() as *const [u8; std::mem::size_of::<#name>()]);
+                // safe assuming that the byte slice represents a valid value of type T.
                 std::mem::transmute::<[u8; std::mem::size_of::<#name>()], #name>(byte_array)
             }
 
             #[inline(always)]
             unsafe fn write_bytes(self, bytes: &mut [u8]) {
+                // safe for Copy + 'static types
                 let byte_array = std::mem::transmute::<#name, [u8; std::mem::size_of::<#name>()]>(self);
+                // safe assuming that the length of the byte slice is Self::LENGTH.
                 bytes.copy_from_slice(&byte_array);
             }
         }

@@ -3,6 +3,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 //! Low-level memory management.
+//!
+//! # Warning
+//!
+//! `Pointer` and `ArrayPointer` are only usable with the `Memory` from the finished
+//! `MemoryBuilder` used to create the pointer (or a clone of the `Memory`).
+//! It is unsafe behavior to use a pointer with any `Memory` other than what initialized it.
 use std::{fmt, marker::PhantomData};
 
 /// Anything that can be converted to or from a fixed-length byte slice.
@@ -82,12 +88,12 @@ use std::{fmt, marker::PhantomData};
 /// ```
 /// use contrail::mem::Bytes;
 ///
-/// let mut bytes = [0; 4];
-/// let data: u32 = 0xC0FFEE42;
+/// let mut bytes = [0; 2];
+/// let data: u16 = 0xCAFE;
 ///
 /// unsafe { data.write_bytes(&mut bytes) };
 ///
-/// assert_eq!(unsafe { u32::read_bytes(&bytes) }, 0xC0FFEE42);
+/// assert_eq!(unsafe { u16::read_bytes(&bytes) }, 0xCAFE);
 /// ```
 pub trait Bytes: Copy + 'static {
     /// The size of `Self` in bytes.
@@ -113,12 +119,42 @@ pub trait Bytes: Copy + 'static {
 /// To create `Memory`, use a [`MemoryBuilder`](crate::mem::MemoryBuilder).
 /// All operations that read from or write to the memory are performed with a
 /// [`Pointer`](Pointer) or an [`ArrayPointer`](ArrayPointer).
+///
+/// # Warning
+///
+/// It is unsafe behavior to use pointers with `Memory` other than the `Memory` from the
+/// `MemoryBuilder` used to initialize the pointer.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Memory {
     bytes: Vec<u8>,
 }
 
 /// A growable chunk of bytes that can be built into `Memory`.
+///
+/// Values and arrays are not added to the `MemoryBuilder` directly; rather, the
+/// `new` methods for [`Pointer`](Pointer::new) and [`ArrayPointer`](ArrayPointer::new)
+/// take `&mut MemoryBuilder` as the first parameter.
+/// After everything is added to the `MemoryBuilder`, the [`finish`](ArrayPointer::finish) method
+/// consumes the `MemoryBuilder` and creates a `Memory`, which is usable with the pointers created
+/// with the original `MemoryBuilder`.
+///
+/// # Warning
+///
+/// It is unsafe behavior to use pointers with `Memory` other than the `Memory` from the
+/// `MemoryBuilder` used to initialize the pointer.
+///
+/// # Examples
+///
+/// ```
+/// use contrail::mem::{MemoryBuilder, Pointer};
+///
+/// let mut builder = MemoryBuilder::new();
+/// let pointer = Pointer::new(&mut builder, 'R');
+/// let mut memory = builder.finish();
+///
+/// // the pointer is usable with the memory after the builder finishes
+/// assert_eq!(pointer.get(&memory), 'R');
+/// ```
 #[derive(Debug, Default, Eq, PartialEq)]
 pub struct MemoryBuilder {
     bytes: Vec<u8>,
@@ -142,12 +178,47 @@ impl MemoryBuilder {
     ///
     /// After calling `finish`, all pointers created using the `MemoryBuilder`
     /// can safely read to and write from the returned `Memory`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use contrail::mem::{ArrayPointer, MemoryBuilder, Pointer};
+    ///
+    /// let mut builder = MemoryBuilder::new();
+    /// let pointer = Pointer::new(&mut builder, 42);
+    /// let array = ArrayPointer::new(&mut builder, &[0, 1, 1, 2, 3, 5, 8]);
+    /// let memory = builder.finish();
+    ///
+    /// // `pointer` and `array` are usable now
+    /// assert_eq!(pointer.get(&memory), 42);
+    /// assert_eq!(array.get(&memory, 5), 5);
+    /// ```
     pub fn finish(self) -> Memory {
         Memory { bytes: self.bytes }
     }
 }
 
-/// A reference to a value in `Memory`.
+/// A reference to a value in memory.
+///
+/// # Warning
+///
+/// A `Pointer` is only usable with the `Memory` from the `MemoryBuilder` used to create the
+/// `Pointer`. Using a `Pointer` with any other memory is considered undefined behavior.
+///
+/// # Examples
+///
+/// ```
+/// use contrail::mem::{MemoryBuilder, Pointer};
+///
+/// let mut builder = MemoryBuilder::new();
+/// let pointer = Pointer::new(&mut builder, 10);
+/// let mut memory = builder.finish();
+///
+/// assert_eq!(pointer.get(&memory), 10);
+///
+/// pointer.update(&mut memory, |x| x * 2);
+/// assert_eq!(pointer.get(&memory), 20);
+/// ```
 pub struct Pointer<T> {
     offset: usize,
     phantom: PhantomData<T>,
@@ -161,6 +232,19 @@ where
     ///
     /// The pointer is only usable after the `MemoryBuilder` is finished and
     /// `Memory` is created.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use contrail::mem::{MemoryBuilder, Pointer};
+    ///
+    /// let mut builder = MemoryBuilder::new();
+    /// let pointer = Pointer::new(&mut builder, 'b');
+    /// let memory = builder.finish();
+    ///
+    /// // the pointer is usable now
+    /// assert_eq!(pointer.get(&memory), 'b');
+    /// ```
     pub fn new(builder: &mut MemoryBuilder, val: T) -> Self {
         let offset = builder.bytes.len();
 
@@ -190,10 +274,10 @@ where
     /// use contrail::mem::{MemoryBuilder, Pointer};
     ///
     /// let mut builder = MemoryBuilder::new();
-    /// let pointer = Pointer::new(&mut builder, 3.14);
+    /// let pi = Pointer::new(&mut builder, 3.14);
     /// let memory = builder.finish();
     ///
-    /// assert_eq!(pointer.get(&memory), 3.14);
+    /// assert_eq!(pi.get(&memory), 3.14);
     /// ```
     #[inline(always)]
     pub fn get(self, memory: &Memory) -> T {
@@ -214,11 +298,11 @@ where
     /// use contrail::mem::{MemoryBuilder, Pointer};
     ///
     /// let mut builder = MemoryBuilder::new();
-    /// let pointer = Pointer::new(&mut builder, 'a');
+    /// let letter = Pointer::new(&mut builder, 'a');
     /// let mut memory = builder.finish();
     ///
-    /// pointer.set(&mut memory, 'z');
-    /// assert_eq!(pointer.get(&memory), 'z');
+    /// letter.set(&mut memory, 'z');
+    /// assert_eq!(letter.get(&memory), 'z');
     /// ```
     #[inline(always)]
     pub fn set(self, memory: &mut Memory, val: T) {
@@ -239,11 +323,11 @@ where
     /// use contrail::mem::{MemoryBuilder, Pointer};
     ///
     /// let mut builder = MemoryBuilder::new();
-    /// let pointer = Pointer::new(&mut builder, 5);
+    /// let side = Pointer::new(&mut builder, 5);
     /// let mut memory = builder.finish();
     ///
-    /// pointer.update(&mut memory, |x| x * x);
-    /// assert_eq!(pointer.get(&memory), 25);
+    /// side.update(&mut memory, |x| x * x);
+    /// assert_eq!(side.get(&memory), 25);
     /// ```
     #[inline(always)]
     pub fn update(self, memory: &mut Memory, f: impl FnOnce(T) -> T) {
@@ -279,6 +363,24 @@ impl<T> PartialEq for Pointer<T> {
 }
 
 /// A reference to an array of values in memory.
+///
+/// # Warning
+///
+/// An `ArrayPointer` is only usable with the `Memory` from the `MemoryBuilder` used to create the
+/// `ArrayPointer`. Using a `ArrayPointer` with any other memory is considered undefined behavior.
+///
+/// # Examples
+///
+/// ```
+/// use contrail::mem::{ArrayPointer, MemoryBuilder};
+///
+/// let mut builder = MemoryBuilder::new();
+/// let array = ArrayPointer::new(&mut builder, &[0, 1, 3, 2]);
+/// let mut memory = builder.finish();
+///
+/// assert_eq!(array.len(), 4);
+/// assert_eq!(array.get(&memory, 3), 2);
+/// ```
 pub struct ArrayPointer<T> {
     offset: usize,
     len: usize,
@@ -289,6 +391,23 @@ impl<T> ArrayPointer<T>
 where
     T: Bytes,
 {
+    /// Creates a new pointer to the given array of values in memory.
+    ///
+    /// The pointer is only usable after the `MemoryBuilder` is finished and
+    /// `Memory` is created.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use contrail::mem::{ArrayPointer, MemoryBuilder};
+    ///
+    /// let mut builder = MemoryBuilder::new();
+    /// let notes = ArrayPointer::new(&mut builder, &['c', 'e', 'g']);
+    /// let memory = builder.finish();
+    ///
+    /// // the pointer is usable now
+    /// assert_eq!(notes.get(&memory, 0), 'c');
+    /// ```
     pub fn new(builder: &mut MemoryBuilder, vals: &[T]) -> Self {
         let offset = builder.bytes.len();
 
@@ -317,11 +436,45 @@ where
         }
     }
 
+    /// Returns the length of the array.
+    ///
+    /// Note that this function does not take any parameters as the length of the array is
+    /// constant.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use contrail::mem::{ArrayPointer, MemoryBuilder};
+    ///
+    /// let mut builder = MemoryBuilder::new();
+    /// let array = ArrayPointer::new(&mut builder, &[1, 2, 3, 4, 5]);
+    /// let memory = builder.finish();
+    ///
+    /// assert_eq!(array.len(), 5);
+    /// ```
     #[inline(always)]
     pub fn len(&self) -> usize {
         self.len
     }
 
+    /// Returns the length of the array is zero.
+    ///
+    /// Note that this function does not take any parameters as the length of the array is
+    /// constant.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use contrail::mem::{ArrayPointer, MemoryBuilder};
+    ///
+    /// let mut builder = MemoryBuilder::new();
+    /// let empty = ArrayPointer::<i32>::new(&mut builder, &[]);
+    /// let not_empty = ArrayPointer::new(&mut builder, &[5i32]);
+    /// let memory = builder.finish();
+    ///
+    /// assert_eq!(empty.is_empty(), true);
+    /// assert_eq!(not_empty.is_empty(), false);
+    /// ```
     #[inline(always)]
     pub fn is_empty(&self) -> bool {
         self.len == 0
@@ -330,6 +483,16 @@ where
     /// Gets the value of the given index of the array pointer from memory.
     ///
     /// # Examples
+    ///
+    /// ```
+    /// use contrail::mem::{ArrayPointer, MemoryBuilder};
+    ///
+    /// let mut builder = MemoryBuilder::new();
+    /// let doubles = ArrayPointer::new(&mut builder, &[0, 2, 4, 6]);
+    /// let memory = builder.finish();
+    ///
+    /// assert_eq!(doubles.get(&memory, 2), 4);
+    /// ```
     #[inline(always)]
     pub fn get(&self, memory: &Memory, i: usize) -> T {
         assert!(i < self.len);
@@ -346,6 +509,19 @@ where
     /// Sets the value of the given index of the array pointer in memory.
     ///
     /// # Examples
+    ///
+    /// ```
+    /// use contrail::mem::{ArrayPointer, MemoryBuilder};
+    ///
+    /// let mut builder = MemoryBuilder::new();
+    /// let letters = ArrayPointer::new(&mut builder, &['a', 'b', 'c']);
+    /// let mut memory = builder.finish();
+    ///
+    /// assert_eq!(letters.get(&memory, 1), 'b');
+    ///
+    /// letters.set(&mut memory, 1, 'z');
+    /// assert_eq!(letters.get(&memory, 1), 'z');
+    /// ```
     #[inline(always)]
     pub fn set(&self, memory: &mut Memory, i: usize, val: T) {
         assert!(i < self.len);
@@ -362,6 +538,19 @@ where
     /// Updates the value of the given index in memory using the given function.
     ///
     /// # Examples
+    ///
+    /// ```
+    /// use contrail::mem::{ArrayPointer, MemoryBuilder};
+    ///
+    /// let mut builder = MemoryBuilder::new();
+    /// let truth_table = ArrayPointer::new(&mut builder, &[true, true, true, false]);
+    /// let mut memory = builder.finish();
+    ///
+    /// assert_eq!(truth_table.get(&memory, 3), false);
+    ///
+    /// truth_table.update(&mut memory, 3, |x| !x);
+    /// assert_eq!(truth_table.get(&memory, 3), true);
+    /// ```
     #[inline(always)]
     pub fn update(&self, memory: &mut Memory, i: usize, f: impl FnOnce(T) -> T) {
         self.set(memory, i, f(self.get(memory, i)));
@@ -370,6 +559,22 @@ where
     /// Swaps the values in memory of two indices of the array pointer.
     ///
     /// # Examples
+    ///
+    /// ```
+    /// use contrail::mem::{ArrayPointer, MemoryBuilder};
+    ///
+    /// let mut builder = MemoryBuilder::new();
+    /// let digits = ArrayPointer::new(&mut builder, &[3, 4, 1, 1, 5, 9]);
+    /// let mut memory = builder.finish();
+    ///
+    /// assert_eq!(digits.get(&memory, 1), 4);
+    /// assert_eq!(digits.get(&memory, 2), 1);
+    ///
+    /// digits.swap(&mut memory, 1, 2);
+    ///
+    /// assert_eq!(digits.get(&memory, 1), 1);
+    /// assert_eq!(digits.get(&memory, 2), 4);
+    /// ```
     #[inline(always)]
     pub fn swap(&self, memory: &mut Memory, i: usize, j: usize) {
         let temp_i = self.get(memory, i);
@@ -416,7 +621,6 @@ macro_rules! impl_bytes_primitive {
                 #[inline(always)]
                 unsafe fn read_bytes(bytes: &[u8]) -> $T {
                     // safe assuming that the length of the byte slice is Self::LENGTH.
-                    // this is up to the caller.
                     let byte_array = *(bytes.as_ptr() as *const [u8; std::mem::size_of::<$T>()]);
                     // safe assuming that the byte slice represents a valid value of type T.
                     std::mem::transmute::<[u8; std::mem::size_of::<$T>()], $T>(byte_array)
@@ -511,15 +715,6 @@ mod tests {
             assert_eq!(format!("{:?}", offset_8), "Pointer { offset: 8 }");
         }
 
-        // checks that a pointer is equal to a clone of itself.
-        #[test]
-        fn clone_eq() {
-            let mut builder = MemoryBuilder::new();
-            let pointer = Pointer::new(&mut builder, 6.66);
-
-            assert_eq!(pointer, pointer.clone());
-        }
-
         #[test]
         fn get_set_update() {
             let mut builder = MemoryBuilder::new();
@@ -539,7 +734,6 @@ mod tests {
     mod array_pointer {
         use super::*;
 
-        // checks Debug.
         #[test]
         fn debug() {
             let mut builder = MemoryBuilder::new();
@@ -556,17 +750,8 @@ mod tests {
             );
         }
 
-        // checks that a pointer is equal to a clone of itself.
         #[test]
-        fn clone_eq() {
-            let mut builder = MemoryBuilder::new();
-            let pointer = ArrayPointer::new(&mut builder, &[true, false]);
-
-            assert_eq!(pointer, pointer.clone());
-        }
-
-        #[test]
-        fn empty_array() {
+        fn empty() {
             let mut builder = MemoryBuilder::new();
             let empty = ArrayPointer::<char>::new(&mut builder, &[]);
             let not_empty = ArrayPointer::new(&mut builder, &['a', 'b', 'c']);
