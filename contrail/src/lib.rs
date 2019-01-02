@@ -12,7 +12,7 @@ pub use contrail_derive::*;
 pub mod mem;
 pub mod storage;
 
-use std::marker::PhantomData;
+use std::{fmt, marker::PhantomData};
 
 use crate::{
     mem::{ArrayPointer, Bytes, Memory, MemoryBuilder, Pointer},
@@ -278,6 +278,14 @@ impl<M, T> Clone for Value<M, T> {
 }
 
 impl<M, T> Copy for Value<M, T> {}
+
+impl<M, T> fmt::Debug for Value<M, T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Value")
+            .field("pointer", &self.pointer)
+            .finish()
+    }
+}
 
 /// A reference to a fixed-length array of values stored on the trail.
 ///

@@ -7,6 +7,8 @@ pub type TrailedSparseSet = SparseSet<Trailed>;
 pub type StableSparseSet = SparseSet<Stable>;
 
 /// A specialized data structure for storing subsets of the range `0..n`.
+///
+/// Features O(1) `contains` and `remove`.
 #[derive(Clone, Copy)]
 pub struct SparseSet<M> {
     values: StableArray<usize>,
@@ -23,7 +25,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use contrail_collections::TrailedSparseSet;
+    /// use contrail_collections::sparse_set::TrailedSparseSet;
     /// use contrail::TrailBuilder;
     ///
     /// let mut builder = TrailBuilder::new();
@@ -46,10 +48,9 @@ where
     /// # Examples
     ///
     /// ```
-    /// use contrail_collections::TrailedSparseSet;
     /// use contrail::TrailBuilder;
+    /// use contrail_collections::sparse_set::TrailedSparseSet;
     ///
-    /// // create a sparse set initialized with the values 0..10
     /// let mut builder = TrailBuilder::new();
     /// let sparse_set = TrailedSparseSet::new_full(&mut builder, 10);
     /// let mut trail = builder.finish();
@@ -70,6 +71,24 @@ where
             .take(self.len.get(trail))
     }
 
+    /// Returns the length of the `SparseSet`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use contrail::TrailBuilder;
+    /// use contrail_collections::sparse_set::TrailedSparseSet;
+    ///
+    /// let mut builder = TrailBuilder::new();
+    /// let sparse_set = TrailedSparseSet::new_full(&mut builder, 10);
+    /// let mut trail = builder.finish();
+    ///
+    /// assert_eq!(sparse_set.len(&trail), 10);
+    ///
+    /// sparse_set.remove(&mut trail, 5);
+    ///
+    /// assert_eq!(sparse_set.len(&trail), 9);
+    /// ```
     #[inline(always)]
     pub fn len(&self, trail: &Trail) -> usize {
         self.len.get(trail)
@@ -101,7 +120,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use contrail_collections::TrailedSparseSet;
+    /// use contrail_collections::sparse_set::TrailedSparseSet;
     /// use contrail::TrailBuilder;
     ///
     /// // create a sparse set initialized with the values 0..10
@@ -134,7 +153,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use contrail_collections::TrailedSparseSet;
+    /// use contrail_collections::sparse_set::TrailedSparseSet;
     /// use contrail::TrailBuilder;
     ///
     /// // create a sparse set initialized with the elements 0..10
@@ -184,14 +203,26 @@ where
 mod test {
     use super::*;
 
-    use contrail::{TrailBuilder, Trailed};
+    use contrail::TrailBuilder;
+
+    #[test]
+    fn basic() {
+        let mut builder = TrailBuilder::new();
+
+        let set = TrailedSparseSet::new_full(&mut builder, 10);
+        let mut trail = builder.finish();
+
+        trail.new_level();
+
+        assert_eq!(set.len(&trail), 10);
+    }
 
     #[test]
     fn test() {
         let mut builder = TrailBuilder::new();
 
         // 0..5
-        let trailed_sparse_set = SparseSet::<Trailed>::new_full(&mut builder, 5);
+        let trailed_sparse_set = TrailedSparseSet::new_full(&mut builder, 5);
 
         let trail = &mut builder.finish();
 

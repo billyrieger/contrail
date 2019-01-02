@@ -83,11 +83,11 @@ use std::{fmt, marker::PhantomData};
 /// use contrail::mem::Bytes;
 ///
 /// let mut bytes = [0; 4];
-/// let data: u32 = 0xBEEFCAFE;
+/// let data: u32 = 0xC0FFEE42;
 ///
 /// unsafe { data.write_bytes(&mut bytes) };
 ///
-/// assert_eq!(unsafe { u32::read_bytes(&bytes) }, 0xBEEFCAFE);
+/// assert_eq!(unsafe { u32::read_bytes(&bytes) }, 0xC0FFEE42);
 /// ```
 pub trait Bytes: Copy + 'static {
     /// The size of `Self` in bytes.
@@ -110,11 +110,9 @@ pub trait Bytes: Copy + 'static {
 /// A fixed-size chunk of bytes that can be accessed and updated using pointers.
 ///
 /// `Memory` has no methods itself.
-/// All operations that read from or write to the memory are performed using
-/// pointers. See the documentation for [`Pointer`](crate::mem::Pointer)
-/// and [`ArrayPointer`](crate::mem::ArrayPointer) for more details.
-///
 /// To create `Memory`, use a [`MemoryBuilder`](crate::mem::MemoryBuilder).
+/// All operations that read from or write to the memory are performed with a
+/// [`Pointer`](Pointer) or an [`ArrayPointer`](ArrayPointer).
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Memory {
     bytes: Vec<u8>,

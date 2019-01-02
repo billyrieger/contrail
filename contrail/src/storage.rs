@@ -1,8 +1,10 @@
+//! High-level memory management.
 use crate::{Memory, MemoryBuilder, Trail, TrailBuilder};
 
-/// Trait representing how something is stored on the trail.
+/// Representation of how something is stored on the trail.
 pub trait StorageMode {
     fn builder_mut(builder: &mut TrailBuilder) -> &mut MemoryBuilder;
+
     fn memory(trail: &Trail) -> &Memory;
     fn memory_mut(trail: &mut Trail) -> &mut Memory;
 }
