@@ -6,7 +6,7 @@ use contrail::{
 pub type TrailedSparseSet = SparseSet<Trailed>;
 pub type StableSparseSet = SparseSet<Stable>;
 
-/// A specialized data structure for storing subsets of the range `0..n`.
+/// A specialized backtrackable data structure for storing subsets of the range `0..n`.
 ///
 /// Features O(1) `contains` and `remove`.
 #[derive(Clone, Copy)]

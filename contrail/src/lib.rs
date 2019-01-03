@@ -4,121 +4,14 @@
 
 //! Simple state management for backtracking search algorithms.
 //!
-//! # Motivation
+//! During a typical branching search algorithm, the search state must be cloned at each branch
+//! point in order to explore the branches independently. `contrail` provides a framework to create
+//! search algorithms that only require a partial clone of the search state at each branch point.
+//! This is facilitated by the [_trail_](Trail), a struct where all search state is stored.
 //!
-//! As an illustrative example, consider a recursive search algorithm that looks for a solution to
-//! some unspecified problem by exploring a binary tree of possible states:
-//!
-//! ```
-//! trait SearchState: Clone {
-//!     /// Checks the solution status of the current state.
-//!     ///
-//!     /// Returns:
-//!     /// - Some(true) if the state is a solution.
-//!     /// - Some(false) if state is not a solution.
-//!     /// - None if current solution status cannot be determined.
-//!     fn solution_status(&self) -> Option<bool>;
-//!
-//!     /// Moves the current state to its left child in the search tree.
-//!     fn branch_left(&mut self);
-//!
-//!     /// Moves the current state to its right child in the search tree.
-//!     fn branch_right(&mut self);
-//! }
-//!
-//! /// Recursively searches for a solution from the given search state.
-//! ///
-//! /// Returns `true` if at least one solution exists below the given state, and `false`
-//! /// otherwise.
-//! fn search(state: impl SearchState) -> bool {
-//!     match state.solution_status() {
-//!         Some(is_solution) => is_solution,
-//!         None => {
-//!             let mut left = state.clone();
-//!             left.branch_left();
-//!             if search(left) {
-//!                 return true;
-//!             }
-//!
-//!             let mut right = state;
-//!             right.branch_right();
-//!             if search(right) {
-//!                 return true;
-//!             }
-//!
-//!             false
-//!         }
-//!     }
-//! }
-//! ```
-//!
-//! The main issue with this implementation is the line `let mut left = state.clone()`. The clone
-//! is necessary because the methods `branch_left` and `branch_right` both mutably modify the
-//! search state. If the search state is large in memory, cloning the entire state at each branch
-//! point could be expensive and slow down the search.
-//!
-//! `contrail` solves this problem by providing a framework for only cloning the relevant parts of
-//! the search state at each branch point. To facilitate this, all state is stored on an object
-//! called the _trail_. Here's what the same search procedure looks like using `contrail`:
-//!
-//! ```
-//! use contrail::Trail;
-//!
-//! trait SearchState {
-//!     /// Checks the solution status of the current state.
-//!     ///
-//!     /// Returns:
-//!     /// - Some(true) if the state is a solution.
-//!     /// - Some(false) if state is not a solution.
-//!     /// - None if current solution status cannot be determined.
-//!     fn solution_status(&self, trail: &Trail) -> Option<bool>;
-//!
-//!     /// Moves the current state to its left child in the search tree.
-//!     fn branch_left(&self, trail: &mut Trail);
-//!
-//!     /// Moves the current state to its right child in the search tree.
-//!     fn branch_right(&self, trail: &mut Trail);
-//! }
-//!
-//! /// Recursively searches for a solution from the given search state.
-//! ///
-//! /// Returns `true` if at least one solution exists below the given state, and `false`
-//! /// otherwise.
-//! fn search(trail: &mut Trail, state: &impl SearchState) -> bool {
-//!     match state.solution_status(trail) {
-//!         Some(is_solution) => is_solution,
-//!         None => {
-//!             trail.new_level();
-//!             state.branch_left(trail);
-//!             if search(trail, state) {
-//!                 return true;
-//!             }
-//!             trail.backtrack();
-//!
-//!             trail.new_level();
-//!             state.branch_right(trail);
-//!             if search(trail, state) {
-//!                 return true;
-//!             }
-//!             trail.backtrack();
-//!
-//!             false
-//!         }
-//!     }
-//! }
-//! ```
-//!
-//! Some key differences from the original example:
-//!
-//! - Functions and methods take a reference to a `Trail` as their first parameter. This is
-//! extremely common in `contrail` since the trail stores the entire state.
-//!
-//! - `branch_left` and `branch_right` no longer require `&mut self`, since the search state is
-//! stored on the trail.
-//!
-//! - In the `search` function, instead of cloning the search state, a new level is pushed onto the
-//! trail before the state is modified. Once the recursive sub-search is complete, the state is
-//! restored to when the new level was added.
+//! This library is heavily based on the memory model used by
+//! [Minion](https://constraintmodelling.org/minion/), a C++ constraint satisfaction problem
+//! solver.
 #[allow(unused_imports)]
 #[macro_use]
 extern crate contrail_derive;
@@ -139,15 +32,21 @@ use crate::{
 ///
 /// # Stable and Trailed Memory
 ///
-/// All state is stored on the trail in memory. The trail consists of _stable_ memory and _trailed_
-/// memory. Both types of storage can be used with [`Value`](Value) and [`Array`](Array). Whenever
-/// [`trail.new_level()`](Trail::new_level) is called, a clone of the trailed memory is made and
-/// appended to an internal stack. Conversely, whenever [`trail.backtrack()`](Trail::backtrack) is
-/// called, the current trailed memory is replaced with the most recent memory from the internal
-/// stack. Stable memory is unaffected by these methods.
+/// The trail consists of _stable_ memory and _trailed_ memory. Both types of storage can be used
+/// with [`Value`](Value) and [`Array`](Array). Whenever [`trail.new_level()`](Trail::new_level) is
+/// called, a clone of the trailed memory is made and appended to an internal stack. Conversely,
+/// whenever [`trail.backtrack()`](Trail::backtrack) is called, the current trailed memory is
+/// replaced with the most recent memory from the internal stack. Stable memory is unaffected by
+/// these methods.
 ///
 /// When designing data structures using the trail, try to store as much as possible in stable
 /// storage. This will make calls to `new_level()` and `backtrack()` more efficient.
+///
+/// # Warning
+///
+/// A `Value` or an `Array` is only usable with the `Trail` from the `TrailBuilder` used to create
+/// it. For instance, if there are multiple trails, it's undefined behavior to use a `Value`
+/// created from one trail with another trail.
 ///
 /// # Examples
 ///
@@ -322,6 +221,7 @@ impl Trail {
 ///
 /// assert_eq!(value.get(&trail), 5);
 /// ```
+#[derive(Debug, Default)]
 pub struct TrailBuilder {
     trailed_mem: MemoryBuilder,
     stable_mem: MemoryBuilder,
@@ -378,6 +278,11 @@ impl TrailBuilder {
 ///
 /// Instead of using `Value` directly, it's often easier to use the type definitions
 /// [`TrailedValue`](TrailedValue) and [`StableValue`](StableValue).
+///
+/// # Warning
+///
+/// A `Value` is only usable with the `Trail` from the `TrailBuilder` used to create it. It's
+/// unsafe, undefined behavior to do otherwise.
 pub struct Value<M, T> {
     pointer: Pointer<T>,
     phantom: PhantomData<M>,
@@ -402,7 +307,7 @@ where
     /// let trail = builder.finish();
     ///
     /// // the value is usable now
-    /// assert_eq!(trail.get(value), 'b');
+    /// assert_eq!(value.get(&trail), 'b');
     /// ```
     pub fn new(builder: &mut TrailBuilder, val: T) -> Self {
         Self {
@@ -494,6 +399,11 @@ impl<M, T> fmt::Debug for Value<M, T> {
 ///
 /// Instead of using `Array` directly, it's often easier to use the type definitions
 /// [`TrailedArray`](TrailedArray) and [`StableArray`](StableArray).
+///
+/// # Warning
+///
+/// An `Array` is only usable with the `Trail` from the `TrailBuilder` used to create it. It's
+/// unsafe, undefined behavior to do otherwise.
 pub struct Array<M, T> {
     pointer: ArrayPointer<T>,
     phantom: PhantomData<M>,
@@ -504,20 +414,21 @@ where
     M: StorageMode,
     T: Bytes,
 {
+    /// Creates a new `Array` with the given values.
     ///
-    /// The `Value` is usable after the `MemoryBuilder` used to create it is finished.
+    /// The `Array` is usable after the `MemoryBuilder` used to create it is finished.
     ///
     /// # Examples
     ///
     /// ```
-    /// use contrail::{TrailBuilder, TrailedValue};
+    /// use contrail::{TrailBuilder, TrailedArray};
     /// 
     /// let mut builder = TrailBuilder::new();
-    /// let value = TrailedValue::new(&mut builder, 'b');
+    /// let array = TrailedArray::new(&mut builder, 5..10);
     /// let trail = builder.finish();
     ///
     /// // the array is usable now
-    /// assert_eq!(trail.get(value), 'b');
+    /// assert_eq!(array.get(&trail, 2), 7);
     /// ```
     pub fn new(builder: &mut TrailBuilder, vals: impl IntoIterator<Item = T>) -> Self {
         Self {
@@ -529,31 +440,45 @@ where
         }
     }
 
+    /// Returns the length of the array.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use contrail::{TrailBuilder, TrailedArray};
+    ///
+    /// let mut builder = TrailBuilder::new();
+    /// let array = TrailedArray::new(&mut builder, 0..8);
+    ///
+    /// assert_eq!(array.len(), 8);
+    /// ```
     #[inline(always)]
     pub fn len(&self) -> usize {
         self.pointer.len()
     }
 
+    /// Checks if the length of the array is equal to 0.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use contrail::{TrailBuilder, TrailedArray};
+    ///
+    /// let mut builder = TrailBuilder::new();
+    /// let empty = TrailedArray::new(&mut builder, 0..0);
+    /// let not_empty = TrailedArray::new(&mut builder, 0..1);
+    ///
+    /// assert_eq!(empty.is_empty(), true);
+    /// assert_eq!(not_empty.is_empty(), false);
+    /// ```
     #[inline(always)]
     pub fn is_empty(&self) -> bool {
         self.pointer.len() == 0
     }
 
     /// Gets the value of the array at the given index.
-    #[inline(always)]
-    pub fn get(&self, trail: &Trail, i: usize) -> T {
-        self.pointer.get(M::memory(trail), i)
-    }
-
-    /// Sets the value of the array at the given index.
-    #[inline(always)]
-    pub fn set(&self, trail: &mut Trail, i: usize, new_val: T) {
-        self.pointer.set(M::memory_mut(trail), i, new_val);
-    }
-
-    /// Updates the value of the array at the given index using the given update function.
     ///
-    /// # Example
+    /// # Examples
     ///
     /// ```
     /// use contrail::{Trail, TrailBuilder, TrailedArray};
@@ -562,10 +487,49 @@ where
     /// let array = TrailedArray::new(&mut builder, 0..10);
     /// let mut trail = builder.finish();
     ///
-    /// assert_eq(array.get(&trail, 4), 4);
+    /// assert_eq!(array.get(&trail, 4), 4);
+    /// ```
+    #[inline(always)]
+    pub fn get(&self, trail: &Trail, i: usize) -> T {
+        self.pointer.get(M::memory(trail), i)
+    }
+
+    /// Sets the value of the array at the given index.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use contrail::{Trail, TrailBuilder, TrailedArray};
+    ///
+    /// let mut builder = TrailBuilder::new();
+    /// let array = TrailedArray::new(&mut builder, 0..10);
+    /// let mut trail = builder.finish();
+    ///
+    /// assert_eq!(array.get(&trail, 4), 4);
+    ///
+    /// array.set(&mut trail, 4, -23);
+    /// assert_eq!(array.get(&trail, 4), -23);
+    /// ```
+    #[inline(always)]
+    pub fn set(&self, trail: &mut Trail, i: usize, new_val: T) {
+        self.pointer.set(M::memory_mut(trail), i, new_val);
+    }
+
+    /// Updates the value of the array at the given index using the given update function.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use contrail::{Trail, TrailBuilder, TrailedArray};
+    ///
+    /// let mut builder = TrailBuilder::new();
+    /// let array = TrailedArray::new(&mut builder, 0..10);
+    /// let mut trail = builder.finish();
+    ///
+    /// assert_eq!(array.get(&trail, 4), 4);
     ///
     /// array.update(&mut trail, 4, |x| x * x);
-    /// assert_eq(array.get(&trail, 4), 16);
+    /// assert_eq!(array.get(&trail, 4), 16);
     /// ```
     #[inline(always)]
     pub fn update(&self, trail: &mut Trail, i: usize, f: impl FnOnce(T) -> T) {
@@ -573,6 +537,24 @@ where
     }
 
     /// Swaps the two values at the given indices of the array in memory.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use contrail::{TrailBuilder, TrailedArray};
+    ///
+    /// let mut builder = TrailBuilder::new();
+    /// let array = TrailedArray::new(&mut builder, vec!['r', 'u', 't', 's']);
+    /// let mut trail = builder.finish();
+    ///
+    /// assert_eq!(array.get(&trail, 2), 't');
+    /// assert_eq!(array.get(&trail, 3), 's');
+    ///
+    /// array.swap(&mut trail, 2, 3);
+    ///
+    /// assert_eq!(array.get(&trail, 2), 's');
+    /// assert_eq!(array.get(&trail, 3), 't');
+    /// ```
     #[inline(always)]
     pub fn swap(&self, trail: &mut Trail, i: usize, j: usize) {
         self.pointer.swap(M::memory_mut(trail), i, j);
@@ -589,6 +571,14 @@ impl<M, T> Clone for Array<M, T> {
 }
 
 impl<M, T> Copy for Array<M, T> {}
+
+impl<M, T> fmt::Debug for Array<M, T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Array")
+            .field("pointer", &self.pointer)
+            .finish()
+    }
+}
 
 /// A value stored on the trail in trailed memory.
 pub type TrailedValue<T> = Value<Trailed, T>;
@@ -607,7 +597,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn trail_and_store_value() {
+    fn trailed_and_stable_value() {
         let init_val = 5;
         let new_val = 6;
 
@@ -637,7 +627,7 @@ mod tests {
     }
 
     #[test]
-    fn trail_and_store_array() {
+    fn trailed_and_stable_array() {
         let init_vals = vec![1, 3, 5, 7];
         let new_vals = vec![2, 4, 6, 8];
 
