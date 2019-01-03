@@ -21,88 +21,72 @@ use crate::{
 
 /// The trail itself.
 ///
+/// # Usage
+///
+/// The trail consists of _stable_ memory and _trailed_ memory. Both types of storage can be used
+/// with [`Value`](Value) and (`Array`)[Array]. Whenever [`trail.new_level()`](Trail::new_level) is
+/// called, a clone of the trailed memory is made and appended to an internal stack. Conversely,
+/// whenever [`trail.backtrack()`](Trail::backtrack) is called, the current trailed memory is
+/// replaced with the most recent memory from the internal stack. Stable memory is unaffected by
+/// these methods.
+///
+/// When designing data structures using the trail, try to store as much as possible in stable
+/// storage. This will make calls to `new_level()` and `backtrack()` more efficient.
+///
 /// # Examples
+///
+/// The following example illustrates the differences between `Trailed` and `Stable` storage:
 ///
 /// ```
 /// use contrail::{StableValue, TrailBuilder, TrailedValue};
 ///
-/// // setup the trail
 /// let mut builder = TrailBuilder::new();
 /// let trailed_counter = TrailedValue::new(&mut builder, 0);
 /// let stable_counter = StableValue::new(&mut builder, 0);
 /// let mut trail = builder.finish();
 ///
-/// // both counters start at 0
 /// assert_eq!(trailed_counter.get(&trail), 0);
 /// assert_eq!(stable_counter.get(&trail), 0);
 ///
-/// // push a new level onto the trail
 /// trail.new_level();
 ///
-/// // increment each counter
 /// trailed_counter.update(&mut trail, |x| x + 1);
 /// stable_counter.update(&mut trail, |x| x + 1);
 ///
-/// // both counters are now at 1
 /// assert_eq!(trailed_counter.get(&trail), 1);
 /// assert_eq!(stable_counter.get(&trail), 1);
 ///
-/// // reset the trail to the most recent level
 /// trail.backtrack();
 ///
-/// // the trailed counter is reset
-/// // the stable counter is unchanged
 /// assert_eq!(trailed_counter.get(&trail), 0);
 /// assert_eq!(stable_counter.get(&trail), 1);
 /// ```
 ///
+/// Another example that backtracks multiple times:
+///
 /// ```
 /// use contrail::{TrailBuilder, TrailedValue};
-///
-/// // for writeln!
-/// use std::fmt::Write;
-///
-/// // instead of writing to stdout with println!,
-/// // capture the output with writeln! to verify it at the end.
-/// let mut output = String::new();
-/// writeln!(output, "output:");
 ///
 /// let mut builder = TrailBuilder::new();
 /// let countdown = TrailedValue::new(&mut builder, 3);
 /// let mut trail = builder.finish();
 ///
-/// writeln!(output, "Counting down from {}:", countdown.get(&trail));
+/// println!("Counting down from {}:", countdown.get(&trail));
 ///
 /// while countdown.get(&trail) > 0 {
 ///     trail.new_level();
-///     writeln!(output, "{}...", countdown.get(&trail));
+///     println!("{}...", countdown.get(&trail));
 ///     countdown.update(&mut trail, |x| x - 1);
 /// }
 ///
-/// writeln!(output, "{}!", countdown.get(&trail));
+/// println!("{}!", countdown.get(&trail));
 ///
-/// writeln!(output, "Counting back up:");
+/// println!("Counting back up:");
 ///
 /// while !trail.is_trail_empty() {
 ///     trail.backtrack();
-///     writeln!(output, "{}", countdown.get(&trail));
+///     println!("{}", countdown.get(&trail));
 /// }
-///
-/// assert_eq!(
-///     output,
-///     "output:
-/// Counting down from 3:
-/// 3...
-/// 2...
-/// 1...
-/// 0!
-/// Counting back up:
-/// 1
-/// 2
-/// 3
-/// "
-///     .to_owned()
-/// );
 /// ```
 pub struct Trail {
     trailed_mem: Memory,
@@ -191,9 +175,8 @@ impl TrailBuilder {
 
 /// A reference to a value stored on the trail.
 ///
-/// How the value is stored on the trail depends on the type parameter `M`.
-/// A `Value<Trailed, T>` is stored in trailed memory,
-/// whereas a `Value<Stable, T>` is stored in stable memory.
+/// A `Value<Trailed, T>` is stored on the trail in trailed memory,
+/// whereas a `Value<Stable, T>` is stored on the trail in stable memory.
 pub struct Value<M, T> {
     pointer: Pointer<T>,
     phantom: PhantomData<M>,

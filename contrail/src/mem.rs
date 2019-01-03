@@ -134,7 +134,7 @@ pub struct Memory {
 /// Values and arrays are not added to the `MemoryBuilder` directly; rather, the
 /// `new` methods for [`Pointer`](Pointer::new) and [`ArrayPointer`](ArrayPointer::new)
 /// take `&mut MemoryBuilder` as the first parameter.
-/// After everything is added to the `MemoryBuilder`, the [`finish`](ArrayPointer::finish) method
+/// After everything is added to the `MemoryBuilder`, the [`finish`](MemoryBuilder::finish) method
 /// consumes the `MemoryBuilder` and creates a `Memory`, which is usable with the pointers created
 /// with the original `MemoryBuilder`.
 ///
