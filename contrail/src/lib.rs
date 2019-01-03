@@ -301,7 +301,7 @@ where
     ///
     /// ```
     /// use contrail::{TrailBuilder, TrailedValue};
-    /// 
+    ///
     /// let mut builder = TrailBuilder::new();
     /// let value = TrailedValue::new(&mut builder, 'b');
     /// let trail = builder.finish();
@@ -422,7 +422,7 @@ where
     ///
     /// ```
     /// use contrail::{TrailBuilder, TrailedArray};
-    /// 
+    ///
     /// let mut builder = TrailBuilder::new();
     /// let array = TrailedArray::new(&mut builder, 5..10);
     /// let trail = builder.finish();
