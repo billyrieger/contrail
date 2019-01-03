@@ -9,7 +9,7 @@ pub type StableSparseSet = SparseSet<Stable>;
 /// A specialized backtrackable data structure for storing subsets of the range `0..n`.
 ///
 /// Features O(1) `contains` and `remove`.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct SparseSet<M> {
     values: StableArray<usize>,
     positions: StableArray<usize>,

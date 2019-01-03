@@ -48,7 +48,7 @@ pub trait StorageMode {
 ///
 /// assert_eq!(trailed_counter.get(&trail), 0);
 /// ```
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Trailed;
 
 impl StorageMode for Trailed {
@@ -94,7 +94,7 @@ impl StorageMode for Trailed {
 ///
 /// assert_eq!(stable_counter.get(&trail), 1);
 /// ```
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Stable;
 
 impl StorageMode for Stable {
