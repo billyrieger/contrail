@@ -476,6 +476,29 @@ where
         self.pointer.len() == 0
     }
 
+    /// Returns an iterator over the elements of the array.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use contrail::{TrailBuilder, TrailedArray};
+    ///
+    /// let mut builder = TrailBuilder::new();
+    /// let odds = TrailedArray::new(&mut builder, (0..10).map(|x| 2 * x + 1));
+    /// let trail = builder.finish();
+    ///
+    /// for odd in odds.iter(&trail) {
+    ///     assert_eq!(odd % 2, 1);
+    /// }
+    /// ```
+    pub fn iter<'t>(&self, trail: &'t Trail) -> ArrayIter<'t, M, T> {
+        ArrayIter {
+            trail,
+            index: 0,
+            array: *self,
+        }
+    }
+
     /// Gets the value of the array at the given index.
     ///
     /// # Examples
@@ -579,6 +602,32 @@ impl<M, T> fmt::Debug for Array<M, T> {
             .finish()
     }
 }
+
+/// An iterator over the values of an `Array`.
+pub struct ArrayIter<'t, M, T> {
+    trail: &'t Trail,
+    index: usize,
+    array: Array<M, T>,
+}
+
+impl<'t, M, T> Iterator for ArrayIter<'t, M, T>
+where
+    M: StorageMode,
+    T: Bytes,
+{
+    type Item = T;
+
+    fn next(&mut self) -> Option<T> {
+        if self.index == self.array.len() {
+            None
+        } else {
+            let to_ret = Some(self.array.get(self.trail, self.index));
+            self.index += 1;
+            to_ret
+        }
+    }
+}
+
 
 /// A value stored on the trail in trailed memory.
 pub type TrailedValue<T> = Value<Trailed, T>;
