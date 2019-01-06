@@ -3,6 +3,7 @@ use contrail::{
     storage::{Stable, StorageMode, Trailed},
     Array, Trail, TrailBuilder,
 };
+use std::fmt;
 
 pub type TrailedLinkedListArena<T> = LinkedListArena<Trailed, T>;
 pub type StableLinkedListArena<T> = LinkedListArena<Stable, T>;
@@ -28,6 +29,14 @@ impl<M, T> Clone for LinkedListNode<M, T> {
 }
 
 impl<M, T> Copy for LinkedListNode<M, T> {}
+
+impl<M, T> fmt::Debug for LinkedListNode<M, T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("LinkedListNode")
+            .field("index", &self.index)
+            .finish()
+    }
+}
 
 impl<M, T> Eq for LinkedListNode<M, T> {}
 
@@ -66,6 +75,26 @@ where
     }
 }
 
+impl<M, T> Clone for LinkedListArena<M, T> {
+    fn clone(&self) -> Self {
+        Self {
+            prev: self.prev,
+            next: self.next,
+            data: self.data,
+        }
+    }
+}
+
+impl<M, T> Copy for LinkedListArena<M, T> {}
+
+impl<M, T> fmt::Debug for LinkedListArena<M, T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("LinkedListArena")
+            .finish()
+    }
+}
+
+
 impl<M, T> LinkedListNode<M, T>
 where
     M: StorageMode,
@@ -81,8 +110,8 @@ where
 
     pub fn next(&self, trail: &Trail) -> LinkedListNode<M, T> {
         LinkedListNode {
-            next: self.next,
             prev: self.prev,
+            next: self.next,
             data: self.data,
             index: self.next.get(trail, self.index),
         }
@@ -90,8 +119,8 @@ where
 
     pub fn prev(&self, trail: &Trail) -> LinkedListNode<M, T> {
         LinkedListNode {
-            next: self.next,
             prev: self.prev,
+            next: self.next,
             data: self.data,
             index: self.prev.get(trail, self.index),
         }
