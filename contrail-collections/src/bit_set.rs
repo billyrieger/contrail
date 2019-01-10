@@ -3,12 +3,12 @@ use contrail::{
     Array, Trail, TrailBuilder,
 };
 
-const BLOCK_SIZE: usize = 64;
+const BLOCK_SIZE: u64 = 64;
 
 #[derive(Clone, Copy)]
 pub struct BitSet<M> {
     blocks: Array<M, u64>,
-    max: usize,
+    max: u64,
 }
 
 pub type TrailedBitSet = BitSet<Trailed>;
@@ -18,7 +18,7 @@ impl<M> BitSet<M>
 where
     M: StorageMode,
 {
-    pub fn new_full(builder: &mut TrailBuilder, len: usize) -> Self {
+    pub fn new_full(builder: &mut TrailBuilder, len: u64) -> Self {
         assert!(len > 0);
         let max = len - 1;
         let num_blocks = max / BLOCK_SIZE + 1;
@@ -26,7 +26,7 @@ where
         Self { blocks, max }
     }
 
-    pub fn new_empty(builder: &mut TrailBuilder, len: usize) -> Self {
+    pub fn new_empty(builder: &mut TrailBuilder, len: u64) -> Self {
         assert!(len > 0);
         let max = len - 1;
         let num_blocks = max / BLOCK_SIZE + 1;
@@ -42,12 +42,12 @@ where
     }
 
     #[inline(always)]
-    pub fn len(&self) -> usize {
+    pub fn len(&self) -> u64 {
         self.max + 1
     }
 
     #[inline(always)]
-    pub fn insert(&self, trail: &mut Trail, value: usize) {
+    pub fn insert(&self, trail: &mut Trail, value: u64) {
         if value <= self.max {
             let index = (value / BLOCK_SIZE) as usize;
             let block = self.blocks.get(trail, index);
@@ -57,7 +57,7 @@ where
     }
 
     #[inline(always)]
-    pub fn contains(&self, trail: &Trail, value: usize) -> bool {
+    pub fn contains(&self, trail: &Trail, value: u64) -> bool {
         if value > self.max {
             false
         } else {
@@ -68,7 +68,7 @@ where
     }
 
     #[inline(always)]
-    pub fn remove(&self, trail: &mut Trail, value: usize) {
+    pub fn remove(&self, trail: &mut Trail, value: u64) {
         if value <= self.max {
             let index = (value / BLOCK_SIZE) as usize;
             let block = self.blocks.get(trail, index);
@@ -78,11 +78,11 @@ where
     }
 
     #[inline(always)]
-    pub fn count_between(&self, trail: &Trail, min: usize, max: usize) -> u64 {
+    pub fn count_between(&self, trail: &Trail, min: u64, max: u64) -> u64 {
         if min <= max && min <= self.max {
             let max = max.min(self.max);
-            let min_block_index = min / BLOCK_SIZE;
-            let max_block_index = max / BLOCK_SIZE;
+            let min_block_index = (min / BLOCK_SIZE) as usize;
+            let max_block_index = (max / BLOCK_SIZE) as usize;
             let min_offset = min % BLOCK_SIZE;
             let max_offset = max % BLOCK_SIZE;
             let min_mask = !0 << min_offset;
@@ -108,15 +108,14 @@ where
         }
     }
 
-    // TODO fix these types
     #[inline(always)]
-    pub fn next_above(&self, trail: &Trail, value: usize) -> Option<u64> {
+    pub fn next_above(&self, trail: &Trail, value: u64) -> Option<u64> {
         if value > self.max {
             None
         } else {
             let block = value / BLOCK_SIZE;
             let offset = value % BLOCK_SIZE;
-            let to_skip = (self.blocks.get(trail, block) >> offset).trailing_zeros() as usize;
+            let to_skip = (self.blocks.get(trail, block as usize) >> offset).trailing_zeros() as u64;
             if to_skip == BLOCK_SIZE {
                 self.next_above(trail, (block + 1) * BLOCK_SIZE)
             } else if value + to_skip > self.max {
@@ -127,14 +126,13 @@ where
         }
     }
 
-    // TODO fix these types
     #[inline(always)]
-    pub fn next_below(&self, trail: &Trail, value: usize) -> Option<u64> {
+    pub fn next_below(&self, trail: &Trail, value: u64) -> Option<u64> {
         let value = value.min(self.max);
         let block = value / BLOCK_SIZE;
         let offset = value % BLOCK_SIZE;
         let to_skip =
-            (self.blocks.get(trail, block) << (BLOCK_SIZE - offset - 1)).leading_zeros() as usize;
+            (self.blocks.get(trail, block as usize) << (BLOCK_SIZE - offset - 1)).leading_zeros() as u64;
         if to_skip == BLOCK_SIZE {
             if block == 0 {
                 None
