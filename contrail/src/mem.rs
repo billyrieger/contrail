@@ -7,17 +7,16 @@
 //! # Warning
 //!
 //! `Pointer` and `ArrayPointer` are only usable with the `Memory` from the finished
-//! `MemoryBuilder` used to create the pointer (or a clone of the `Memory`).
-//! It is unsafe behavior to use a pointer with any `Memory` other than what initialized it.
+//! `MemoryBuilder` used to create the pointer (or a clone of the `Memory`).  It is unsafe behavior
+//! to use a pointer with any `Memory` other than what initialized it.
 use std::{fmt, marker::PhantomData};
 
 /// Anything that can be converted to or from a fixed-length byte slice.
 ///
-/// In theory, there could be a blanket implementation of `Bytes` for types
-/// that are `Copy + 'static`. Unfortunately such an implementation is
-/// impossible until [this Rust issue](https://github.com/rust-lang/rust/issues/43408)
-/// is resolved. For now, `Bytes` is only implemented for the following
-/// primitive types:
+/// In theory, there could be a blanket implementation of `Bytes` for types that are `Copy +
+/// 'static`. Unfortunately such an implementation is impossible until [this Rust
+/// issue](https://github.com/rust-lang/rust/issues/43408) is resolved. For now, `Bytes` is only
+/// implemented for the following primitive types:
 ///
 /// - `i8`, `i16`, `i32`, `i64`, `i128`, `isize`
 /// - `u8`, `u16`, `u32`, `u64`, `u128`, `usize`
@@ -28,9 +27,8 @@ use std::{fmt, marker::PhantomData};
 ///
 /// # Deriving `Bytes`
 ///
-/// `Bytes` can be derived on custom data types with `#[derive(Bytes)]`.
-/// To use this feature, `#[macro_use] extern crate contrail` must be in the
-/// crate root.
+/// `Bytes` can be derived on custom data types with `#[derive(Bytes)]`.  To use this feature,
+/// `#[macro_use] extern crate contrail` must be in the crate root.
 ///
 /// Since `Bytes: Copy`, it's usually necessary to derive `Clone` and `Copy` as well.
 ///
@@ -55,10 +53,9 @@ use std::{fmt, marker::PhantomData};
 ///
 /// ## Limitations
 ///
-/// Due to the Rust issue mentioned above, using generic parameters is
-/// disallowed when deriving `Bytes`. This includes type parameters as well as
-/// lifetimes (although generic lifetimes would be disallowed anyway since
-/// `Bytes: 'static`):
+/// Due to the Rust issue mentioned above, using generic parameters is disallowed when deriving
+/// `Bytes`. This includes type parameters as well as lifetimes (although generic lifetimes would
+/// be disallowed anyway since `Bytes: 'static`):
 ///
 /// ```compile_fail
 /// # #[macro_use] extern crate contrail;
@@ -101,10 +98,9 @@ pub trait Bytes: Copy + 'static {
 
     /// Reads a value of type `Self` from the byte slice.
     ///
-    /// The caller must guarantee that `bytes.len() == Self::LENGTH` and that
-    /// the byte slice represents a valid value of type `Self`. Really the only
-    /// way to be sure of this is to write a valid value to the byte slice
-    /// beforehand.
+    /// The caller must guarantee that `bytes.len() == Self::LENGTH` and that the byte slice
+    /// represents a valid value of type `Self`. Really the only way to be sure of this is to write
+    /// a valid value to the byte slice beforehand.
     unsafe fn read_bytes(bytes: &[u8]) -> Self;
 
     /// Writes a copy of `self` to the byte slice.
@@ -115,10 +111,9 @@ pub trait Bytes: Copy + 'static {
 
 /// A fixed-size chunk of bytes that can be accessed and updated using pointers.
 ///
-/// `Memory` has no methods itself.
-/// To create `Memory`, use a [`MemoryBuilder`](crate::mem::MemoryBuilder).
-/// All operations that read from or write to the memory are performed with a
-/// [`Pointer`](Pointer) or an [`ArrayPointer`](ArrayPointer).
+/// `Memory` has no methods itself.  To create `Memory`, use a
+/// [`MemoryBuilder`](crate::mem::MemoryBuilder).  All operations that read from or write to the
+/// memory are performed with a [`Pointer`](Pointer) or an [`ArrayPointer`](ArrayPointer).
 ///
 /// # Warning
 ///
@@ -131,12 +126,11 @@ pub struct Memory {
 
 /// A growable chunk of bytes that can be built into `Memory`.
 ///
-/// Values and arrays are not added to the `MemoryBuilder` directly; rather, the
-/// `new` methods for [`Pointer`](Pointer::new) and [`ArrayPointer`](ArrayPointer::new)
-/// take `&mut MemoryBuilder` as the first parameter.
-/// After everything is added to the `MemoryBuilder`, the [`finish`](MemoryBuilder::finish) method
-/// consumes the `MemoryBuilder` and creates a `Memory`, which is usable with the pointers created
-/// with the original `MemoryBuilder`.
+/// Values and arrays are not added to the `MemoryBuilder` directly; rather, the `new` methods for
+/// [`Pointer`](Pointer::new) and [`ArrayPointer`](ArrayPointer::new) take `&mut MemoryBuilder` as
+/// the first parameter.  After everything is added to the `MemoryBuilder`, the
+/// [`finish`](MemoryBuilder::finish) method consumes the `MemoryBuilder` and creates a `Memory`,
+/// which is usable with the pointers created with the original `MemoryBuilder`.
 ///
 /// # Warning
 ///
@@ -176,8 +170,8 @@ impl MemoryBuilder {
 
     /// Consumes the `MemoryBuilder` to create a `Memory`.
     ///
-    /// After calling `finish`, all pointers created using the `MemoryBuilder`
-    /// can safely read to and write from the returned `Memory`.
+    /// After calling `finish`, all pointers created using the `MemoryBuilder` can safely read to
+    /// and write from the returned `Memory`.
     ///
     /// # Examples
     ///
@@ -230,8 +224,7 @@ where
 {
     /// Creates a new pointer to the given value in memory.
     ///
-    /// The pointer is only usable after the `MemoryBuilder` is finished and
-    /// `Memory` is created.
+    /// The pointer is only usable after the `MemoryBuilder` is finished and `Memory` is created.
     ///
     /// # Examples
     ///
