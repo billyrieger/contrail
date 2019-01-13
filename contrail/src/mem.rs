@@ -1,6 +1,8 @@
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License,
+ * v. 2.0. If a copy of the MPL was not distributed with this file, You can
+ * obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //! Low-level memory management.
 //!
@@ -488,7 +490,7 @@ where
     /// ```
     #[inline(always)]
     pub fn get(&self, memory: &Memory, i: usize) -> T {
-        assert!(i < self.len);
+        assert!(i < self.len, "array index out of bounds");
         let mem_offset = self.offset + i * T::LENGTH;
         unsafe {
             T::read_bytes(
@@ -517,7 +519,7 @@ where
     /// ```
     #[inline(always)]
     pub fn set(&self, memory: &mut Memory, i: usize, val: T) {
-        assert!(i < self.len);
+        assert!(i < self.len, "array index out of bounds");
         let mem_offset = self.offset + i * T::LENGTH;
         unsafe {
             val.write_bytes(

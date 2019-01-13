@@ -1,6 +1,8 @@
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public License,
+ * v. 2.0. If a copy of the MPL was not distributed with this file, You can
+ * obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //! High-level memory management.
 use crate::{Memory, MemoryBuilder, Trail, TrailBuilder};
@@ -31,23 +33,23 @@ pub trait StorageMode {
 /// # Examples
 ///
 /// ```
-/// use contrail::{TrailBuilder, TrailedValue};
+/// use contrail::{TrailBuilder, BacktrackableValue};
 ///
 /// let mut builder = TrailBuilder::new();
-/// let trailed_counter = TrailedValue::new(&mut builder, 0);
+/// let backtrackable_counter = BacktrackableValue::new(&mut builder, 0);
 /// let mut trail = builder.finish();
 ///
-/// assert_eq!(trailed_counter.get(&trail), 0);
+/// assert_eq!(backtrackable_counter.get(&trail), 0);
 ///
 /// trail.new_level();
 ///
-/// trailed_counter.update(&mut trail, |x| x + 1);
+/// backtrackable_counter.update(&mut trail, |x| x + 1);
 ///
-/// assert_eq!(trailed_counter.get(&trail), 1);
+/// assert_eq!(backtrackable_counter.get(&trail), 1);
 ///
 /// trail.backtrack();
 ///
-/// assert_eq!(trailed_counter.get(&trail), 0);
+/// assert_eq!(backtrackable_counter.get(&trail), 0);
 /// ```
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Backtrackable;
@@ -55,45 +57,45 @@ pub struct Backtrackable;
 impl StorageMode for Backtrackable {
     #[inline(always)]
     fn builder_mut(builder: &mut TrailBuilder) -> &mut MemoryBuilder {
-        &mut builder.trailed_mem
+        &mut builder.backtrackable_mem
     }
 
     #[inline(always)]
     fn memory(trail: &Trail) -> &Memory {
-        &trail.trailed_mem
+        &trail.backtrackable_mem
     }
 
     #[inline(always)]
     fn memory_mut(trail: &mut Trail) -> &mut Memory {
-        &mut trail.trailed_mem
+        &mut trail.backtrackable_mem
     }
 }
 
 /// Objects stored on the trail in stable memory.
 ///
 /// Instead of using `Stable` directly, it's often easier to use the type definitions
-/// [`StableValue`](crate::StableValue) and [`StableArray`](crate::StableArray).
+/// [`NonBacktrackableValue`](crate::NonBacktrackableValue) and [`StableArray`](crate::StableArray).
 ///
 /// # Examples
 ///
 /// ```
-/// use contrail::{StableValue, TrailBuilder};
+/// use contrail::{NonBacktrackableValue, TrailBuilder};
 ///
 /// let mut builder = TrailBuilder::new();
-/// let stable_counter = StableValue::new(&mut builder, 0);
+/// let non_backtrackable_counter = NonBacktrackableValue::new(&mut builder, 0);
 /// let mut trail = builder.finish();
 ///
-/// assert_eq!(stable_counter.get(&trail), 0);
+/// assert_eq!(non_backtrackable_counter.get(&trail), 0);
 ///
 /// trail.new_level();
 ///
-/// stable_counter.update(&mut trail, |x| x + 1);
+/// non_backtrackable_counter.update(&mut trail, |x| x + 1);
 ///
-/// assert_eq!(stable_counter.get(&trail), 1);
+/// assert_eq!(non_backtrackable_counter.get(&trail), 1);
 ///
 /// trail.backtrack();
 ///
-/// assert_eq!(stable_counter.get(&trail), 1);
+/// assert_eq!(non_backtrackable_counter.get(&trail), 1);
 /// ```
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct NonBacktrackable;
@@ -101,16 +103,16 @@ pub struct NonBacktrackable;
 impl StorageMode for NonBacktrackable {
     #[inline(always)]
     fn builder_mut(builder: &mut TrailBuilder) -> &mut MemoryBuilder {
-        &mut builder.stable_mem
+        &mut builder.non_backtrackable_mem
     }
 
     #[inline(always)]
     fn memory(trail: &Trail) -> &Memory {
-        &trail.stable_mem
+        &trail.non_backtrackable_mem
     }
 
     #[inline(always)]
     fn memory_mut(trail: &mut Trail) -> &mut Memory {
-        &mut trail.stable_mem
+        &mut trail.non_backtrackable_mem
     }
 }

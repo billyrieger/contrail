@@ -1,14 +1,14 @@
 use contrail::{
     mem::Bytes,
-    storage::{Stable, StorageMode, Trailed},
+    storage::{NonBacktrackable, StorageMode, Backtrackable},
     Array, Trail, TrailBuilder,
 };
 use std::fmt;
 
-pub type TrailedLinkedListArena<T> = LinkedListArena<Trailed, T>;
-pub type StableLinkedListArena<T> = LinkedListArena<Stable, T>;
-pub type TrailedLinkedListNode<T> = LinkedListNode<Trailed, T>;
-pub type StableLinkedListNode<T> = LinkedListNode<Stable, T>;
+pub type BacktrackableLinkedListArena<T> = LinkedListArena<Backtrackable, T>;
+pub type NonBacktrackableLinkedListArena<T> = LinkedListArena<NonBacktrackable, T>;
+pub type BacktrackableLinkedListNode<T> = LinkedListNode<Backtrackable, T>;
+pub type NonBacktrackableLinkedListNode<T> = LinkedListNode<NonBacktrackable, T>;
 
 pub struct LinkedListNode<M, T> {
     prev: Array<M, usize>,
@@ -89,11 +89,9 @@ impl<M, T> Copy for LinkedListArena<M, T> {}
 
 impl<M, T> fmt::Debug for LinkedListArena<M, T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("LinkedListArena")
-            .finish()
+        f.debug_struct("LinkedListArena").finish()
     }
 }
-
 
 impl<M, T> LinkedListNode<M, T>
 where
@@ -182,7 +180,7 @@ mod tests {
     #[test]
     fn unlink() {
         let mut builder = TrailBuilder::new();
-        let arena = StableLinkedListArena::new(&mut builder, (0..2).map(|_| ()).collect());
+        let arena = NonBacktrackableLinkedListArena::new(&mut builder, (0..2).map(|_| ()).collect());
         let mut trail = builder.finish();
 
         let a = arena.node(0);
@@ -206,7 +204,7 @@ mod tests {
     #[test]
     fn insert_after() {
         let mut builder = TrailBuilder::new();
-        let arena = StableLinkedListArena::new(&mut builder, (0..3).map(|_| ()).collect());
+        let arena = NonBacktrackableLinkedListArena::new(&mut builder, (0..3).map(|_| ()).collect());
         let mut trail = builder.finish();
 
         let a = arena.node(0);
@@ -228,7 +226,7 @@ mod tests {
     #[test]
     fn insert_before() {
         let mut builder = TrailBuilder::new();
-        let arena = StableLinkedListArena::new(&mut builder, (0..3).map(|_| ()).collect());
+        let arena = NonBacktrackableLinkedListArena::new(&mut builder, (0..3).map(|_| ()).collect());
         let mut trail = builder.finish();
 
         let a = arena.node(0);

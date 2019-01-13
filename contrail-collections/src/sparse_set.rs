@@ -1,18 +1,18 @@
 use contrail::{
-    storage::{Stable, StorageMode, Trailed},
-    StableArray, Trail, TrailBuilder, Value,
+    storage::{NonBacktrackable, StorageMode, Backtrackable},
+    NonBacktrackableArray, Trail, TrailBuilder, Value,
 };
 
-pub type TrailedSparseSet = SparseSet<Trailed>;
-pub type StableSparseSet = SparseSet<Stable>;
+pub type BacktrackableSparseSet = SparseSet<Backtrackable>;
+pub type NonBacktrackableSparseSet = SparseSet<NonBacktrackable>;
 
 /// A specialized backtrackable data structure for storing subsets of the range `0..n`.
 ///
 /// Features O(1) `contains` and `remove`.
 #[derive(Clone, Copy, Debug)]
 pub struct SparseSet<M> {
-    values: StableArray<usize>,
-    positions: StableArray<usize>,
+    values: NonBacktrackableArray<usize>,
+    positions: NonBacktrackableArray<usize>,
     len: Value<M, usize>,
 }
 
@@ -25,19 +25,19 @@ where
     /// # Examples
     ///
     /// ```
-    /// use contrail_collections::sparse_set::TrailedSparseSet;
     /// use contrail::TrailBuilder;
+    /// use contrail_collections::sparse_set::BacktrackableSparseSet;
     ///
     /// let mut builder = TrailBuilder::new();
-    /// let sparse_set = TrailedSparseSet::new_full(&mut builder, 10);
+    /// let sparse_set = BacktrackableSparseSet::new_full(&mut builder, 10);
     /// let mut trail = builder.finish();
     ///
     /// assert_eq!(sparse_set.len(&trail), 10);
     /// ```
     pub fn new_full(builder: &mut TrailBuilder, len: usize) -> Self {
         Self {
-            values: StableArray::new(builder, 0..len),
-            positions: StableArray::new(builder, 0..len),
+            values: NonBacktrackableArray::new(builder, 0..len),
+            positions: NonBacktrackableArray::new(builder, 0..len),
             len: Value::new(builder, len),
         }
     }
@@ -49,10 +49,10 @@ where
     ///
     /// ```
     /// use contrail::TrailBuilder;
-    /// use contrail_collections::sparse_set::TrailedSparseSet;
+    /// use contrail_collections::sparse_set::BacktrackableSparseSet;
     ///
     /// let mut builder = TrailBuilder::new();
-    /// let sparse_set = TrailedSparseSet::new_full(&mut builder, 10);
+    /// let sparse_set = BacktrackableSparseSet::new_full(&mut builder, 10);
     /// let mut trail = builder.finish();
     ///
     /// // remove some values
@@ -77,10 +77,10 @@ where
     ///
     /// ```
     /// use contrail::TrailBuilder;
-    /// use contrail_collections::sparse_set::TrailedSparseSet;
+    /// use contrail_collections::sparse_set::BacktrackableSparseSet;
     ///
     /// let mut builder = TrailBuilder::new();
-    /// let sparse_set = TrailedSparseSet::new_full(&mut builder, 10);
+    /// let sparse_set = BacktrackableSparseSet::new_full(&mut builder, 10);
     /// let mut trail = builder.finish();
     ///
     /// assert_eq!(sparse_set.len(&trail), 10);
@@ -120,12 +120,12 @@ where
     /// # Examples
     ///
     /// ```
-    /// use contrail_collections::sparse_set::TrailedSparseSet;
     /// use contrail::TrailBuilder;
+    /// use contrail_collections::sparse_set::BacktrackableSparseSet;
     ///
     /// // create a sparse set initialized with the values 0..10
     /// let mut builder = TrailBuilder::new();
-    /// let sparse_set = TrailedSparseSet::new_full(&mut builder, 10);
+    /// let sparse_set = BacktrackableSparseSet::new_full(&mut builder, 10);
     /// let mut trail = builder.finish();
     ///
     /// // keep only the odd numbers
@@ -153,12 +153,12 @@ where
     /// # Examples
     ///
     /// ```
-    /// use contrail_collections::sparse_set::TrailedSparseSet;
     /// use contrail::TrailBuilder;
+    /// use contrail_collections::sparse_set::BacktrackableSparseSet;
     ///
     /// // create a sparse set initialized with the elements 0..10
     /// let mut builder = TrailBuilder::new();
-    /// let sparse_set = TrailedSparseSet::new_full(&mut builder, 10);
+    /// let sparse_set = BacktrackableSparseSet::new_full(&mut builder, 10);
     /// let mut trail = builder.finish();
     ///
     /// // keep only the fibonacci numbers
@@ -209,7 +209,7 @@ mod test {
     fn basic() {
         let mut builder = TrailBuilder::new();
 
-        let set = TrailedSparseSet::new_full(&mut builder, 10);
+        let set = BacktrackableSparseSet::new_full(&mut builder, 10);
         let mut trail = builder.finish();
 
         trail.new_level();
@@ -222,7 +222,7 @@ mod test {
         let mut builder = TrailBuilder::new();
 
         // 0..5
-        let trailed_sparse_set = TrailedSparseSet::new_full(&mut builder, 5);
+        let trailed_sparse_set = BacktrackableSparseSet::new_full(&mut builder, 5);
 
         let trail = &mut builder.finish();
 

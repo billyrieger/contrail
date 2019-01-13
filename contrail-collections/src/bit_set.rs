@@ -1,5 +1,5 @@
 use contrail::{
-    storage::{Stable, StorageMode, Trailed},
+    storage::{NonBacktrackable, StorageMode, Backtrackable},
     Array, Trail, TrailBuilder,
 };
 
@@ -11,8 +11,8 @@ pub struct BitSet<M> {
     max: u64,
 }
 
-pub type TrailedBitSet = BitSet<Trailed>;
-pub type StableBitSet = BitSet<Stable>;
+pub type BacktrackableBitSet = BitSet<Backtrackable>;
+pub type NonBacktrackableBitSet = BitSet<NonBacktrackable>;
 
 impl<M> BitSet<M>
 where
@@ -115,7 +115,8 @@ where
         } else {
             let block = value / BLOCK_SIZE;
             let offset = value % BLOCK_SIZE;
-            let to_skip = (self.blocks.get(trail, block as usize) >> offset).trailing_zeros() as u64;
+            let to_skip =
+                (self.blocks.get(trail, block as usize) >> offset).trailing_zeros() as u64;
             if to_skip == BLOCK_SIZE {
                 self.next_above(trail, (block + 1) * BLOCK_SIZE)
             } else if value + to_skip > self.max {
@@ -131,8 +132,8 @@ where
         let value = value.min(self.max);
         let block = value / BLOCK_SIZE;
         let offset = value % BLOCK_SIZE;
-        let to_skip =
-            (self.blocks.get(trail, block as usize) << (BLOCK_SIZE - offset - 1)).leading_zeros() as u64;
+        let to_skip = (self.blocks.get(trail, block as usize) << (BLOCK_SIZE - offset - 1))
+            .leading_zeros() as u64;
         if to_skip == BLOCK_SIZE {
             if block == 0 {
                 None
