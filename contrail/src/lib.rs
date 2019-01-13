@@ -666,7 +666,7 @@ mod tests {
         let backtrackable = BacktrackableValue::new(&mut builder, init_val);
         let non_backtrackable = NonBacktrackableValue::new(&mut builder, init_val);
         let mut trail = builder.finish();
-        
+
         assert_eq!(trail.trail_len(), 0);
         assert!(trail.is_trail_empty());
 

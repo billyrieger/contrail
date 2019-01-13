@@ -33,7 +33,7 @@ pub trait StorageMode {
 /// # Examples
 ///
 /// ```
-/// use contrail::{TrailBuilder, BacktrackableValue};
+/// use contrail::{BacktrackableValue, TrailBuilder};
 ///
 /// let mut builder = TrailBuilder::new();
 /// let backtrackable_counter = BacktrackableValue::new(&mut builder, 0);
@@ -74,7 +74,8 @@ impl StorageMode for Backtrackable {
 /// Objects stored on the trail in stable memory.
 ///
 /// Instead of using `NonBacktrackable` directly, it's often easier to use the type definitions
-/// [`NonBacktrackableValue`](crate::NonBacktrackableValue) and [`NonBacktrackableArray`](crate::NonBacktrackableArray).
+/// [`NonBacktrackableValue`](crate::NonBacktrackableValue) and
+/// [`NonBacktrackableArray`](crate::NonBacktrackableArray).
 ///
 /// # Examples
 ///

@@ -1,5 +1,5 @@
 use contrail::{
-    storage::{NonBacktrackable, StorageMode, Backtrackable},
+    storage::{Backtrackable, NonBacktrackable, StorageMode},
     NonBacktrackableArray, Trail, TrailBuilder, Value,
 };
 

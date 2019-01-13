@@ -1,6 +1,6 @@
 use contrail::{
     mem::Bytes,
-    storage::{NonBacktrackable, StorageMode, Backtrackable},
+    storage::{Backtrackable, NonBacktrackable, StorageMode},
     Array, Trail, TrailBuilder,
 };
 use std::fmt;
@@ -180,7 +180,8 @@ mod tests {
     #[test]
     fn unlink() {
         let mut builder = TrailBuilder::new();
-        let arena = NonBacktrackableLinkedListArena::new(&mut builder, (0..2).map(|_| ()).collect());
+        let arena =
+            NonBacktrackableLinkedListArena::new(&mut builder, (0..2).map(|_| ()).collect());
         let mut trail = builder.finish();
 
         let a = arena.node(0);
@@ -204,7 +205,8 @@ mod tests {
     #[test]
     fn insert_after() {
         let mut builder = TrailBuilder::new();
-        let arena = NonBacktrackableLinkedListArena::new(&mut builder, (0..3).map(|_| ()).collect());
+        let arena =
+            NonBacktrackableLinkedListArena::new(&mut builder, (0..3).map(|_| ()).collect());
         let mut trail = builder.finish();
 
         let a = arena.node(0);
@@ -226,7 +228,8 @@ mod tests {
     #[test]
     fn insert_before() {
         let mut builder = TrailBuilder::new();
-        let arena = NonBacktrackableLinkedListArena::new(&mut builder, (0..3).map(|_| ()).collect());
+        let arena =
+            NonBacktrackableLinkedListArena::new(&mut builder, (0..3).map(|_| ()).collect());
         let mut trail = builder.finish();
 
         let a = arena.node(0);
