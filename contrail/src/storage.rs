@@ -7,10 +7,10 @@ use crate::{Memory, MemoryBuilder, Trail, TrailBuilder};
 
 /// Representation of how something is stored on the trail.
 ///
-/// Objects can be stored on the trail in trailed or stable memory, represented by
-/// [`Trailed`](Trailed) and [`Stable`](Stable), respectively. Both of these structs implement
-/// `StorageMode`. See the documentation for [`Trail`](Trail) for the difference between trailed
-/// and stable storage.
+/// Objects can be stored on the trail in backtrackable or non-backtrackable memory, represented by
+/// [`Backtrackable`](Backtrackable) and [`NonBacktrackable`](NonBacktrackable), respectively. Both
+/// of these structs implement `StorageMode`. See the documentation for [`Trail`](Trail) for the
+/// difference between backtrackable and non-backtrackable storage.
 pub trait StorageMode {
     /// Returns the associated `MemoryBuilder` from a `TrailBuilder`.
     fn builder_mut(builder: &mut TrailBuilder) -> &mut MemoryBuilder;
@@ -22,10 +22,11 @@ pub trait StorageMode {
     fn memory_mut(trail: &mut Trail) -> &mut Memory;
 }
 
-/// Objects stored on the trail in trailed memory.
+/// Objects stored on the trail in backtrackable memory.
 ///
-/// Instead of using `Trailed` directly, it's often easier to use the type definitions
-/// [`TrailedValue`](crate::TrailedValue) and [`TrailedArray`](crate::TrailedArray).
+/// Instead of using `Backtrackable` directly, it's often easier to use the type definitions
+/// [`BacktrackableValue`](crate::BacktrackableValue) and
+/// [`BacktrackableArray`](crate::NonBacktrackableArray).
 ///
 /// # Examples
 ///
@@ -49,9 +50,9 @@ pub trait StorageMode {
 /// assert_eq!(trailed_counter.get(&trail), 0);
 /// ```
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct Trailed;
+pub struct Backtrackable;
 
-impl StorageMode for Trailed {
+impl StorageMode for Backtrackable {
     #[inline(always)]
     fn builder_mut(builder: &mut TrailBuilder) -> &mut MemoryBuilder {
         &mut builder.trailed_mem
@@ -95,9 +96,9 @@ impl StorageMode for Trailed {
 /// assert_eq!(stable_counter.get(&trail), 1);
 /// ```
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct Stable;
+pub struct NonBacktrackable;
 
-impl StorageMode for Stable {
+impl StorageMode for NonBacktrackable {
     #[inline(always)]
     fn builder_mut(builder: &mut TrailBuilder) -> &mut MemoryBuilder {
         &mut builder.stable_mem

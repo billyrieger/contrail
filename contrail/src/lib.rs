@@ -25,22 +25,23 @@ use std::{fmt, marker::PhantomData};
 
 use crate::{
     mem::{ArrayPointer, Bytes, Memory, MemoryBuilder, Pointer},
-    storage::{Stable, StorageMode, Trailed},
+    storage::{Backtrackable, NonBacktrackable, StorageMode},
 };
 
 /// The trail itself.
 ///
-/// # Stable and Trailed Memory
+/// # Backtrackable and non-backtrackable memory
 ///
-/// The trail consists of _stable_ memory and _trailed_ memory. Both types of storage can be used
-/// with [`Value`](Value) and [`Array`](Array). Whenever [`trail.new_level()`](Trail::new_level) is
-/// called, a clone of the trailed memory is made and appended to an internal stack. Conversely,
-/// whenever [`trail.backtrack()`](Trail::backtrack) is called, the current trailed memory is
-/// replaced with the most recent memory from the internal stack. Stable memory is unaffected by
-/// these methods.
+/// The trail consists of _backtrackable_ memory and _non-backtrackable_ memory. Both types of
+/// storage can be used with [`Value`](Value) and [`Array`](Array). Whenever
+/// [`trail.new_level()`](Trail::new_level) is called, a clone of the backtrackable memory is made
+/// and appended to an internal stack. Conversely, whenever [`trail.backtrack()`](Trail::backtrack)
+/// is called, the current backtrackable memory is replaced with the most recent clone from the
+/// internal stack. Non-backtrackable memory is unaffected by these methods.
 ///
-/// When designing data structures using the trail, try to store as much as possible in stable
-/// storage. This will make calls to `new_level()` and `backtrack()` more efficient.
+/// When designing data structures using the trail, try to store as much as possible in
+/// non-backtrackable storage. This will make calls to `new_level()` and `backtrack()` more
+/// efficient.
 ///
 /// # Warning
 ///
@@ -50,10 +51,11 @@ use crate::{
 ///
 /// # Examples
 ///
-/// The following example illustrates the differences between `Trailed` and `Stable` storage:
+/// The following example illustrates the differences between `Backtrackable` and
+/// `NonBacktrackable` storage:
 ///
 /// ```
-/// use contrail::{StableValue, TrailBuilder, TrailedValue};
+/// use contrail::{BacktrackableValue, NonBacktrackableValue, TrailBuilder};
 ///
 /// let mut builder = TrailBuilder::new();
 /// let trailed_counter = TrailedValue::new(&mut builder, 0);
@@ -628,18 +630,17 @@ where
     }
 }
 
-
 /// A value stored on the trail in trailed memory.
-pub type TrailedValue<T> = Value<Trailed, T>;
+pub type BacktrackableValue<T> = Value<Backtrackable, T>;
 
 /// A value stored on the trail in stable memory.
-pub type StableValue<T> = Value<Stable, T>;
+pub type NonBacktrackableValue<T> = Value<NonBacktrackable, T>;
 
 /// A fixed-length array stored on the trail in trailed memory.
-pub type TrailedArray<T> = Array<Trailed, T>;
+pub type BacktrackableArray<T> = Array<Backtrackable, T>;
 
 /// A fixed-length array stored on the trail in stable memory.
-pub type StableArray<T> = Array<Stable, T>;
+pub type NonBacktrackableArray<T> = Array<NonBacktrackable, T>;
 
 #[cfg(test)]
 mod tests {
