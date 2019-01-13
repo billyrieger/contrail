@@ -73,8 +73,8 @@ impl StorageMode for Backtrackable {
 
 /// Objects stored on the trail in stable memory.
 ///
-/// Instead of using `Stable` directly, it's often easier to use the type definitions
-/// [`NonBacktrackableValue`](crate::NonBacktrackableValue) and [`StableArray`](crate::StableArray).
+/// Instead of using `NonBacktrackable` directly, it's often easier to use the type definitions
+/// [`NonBacktrackableValue`](crate::NonBacktrackableValue) and [`NonBacktrackableArray`](crate::NonBacktrackableArray).
 ///
 /// # Examples
 ///
