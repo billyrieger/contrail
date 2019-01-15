@@ -407,6 +407,14 @@ impl<M, T> fmt::Debug for Value<M, T> {
     }
 }
 
+impl<M, T> Eq for Value<M, T> {}
+
+impl<M, T> PartialEq for Value<M, T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.pointer == other.pointer
+    }
+}
+
 /// A reference to a fixed-length array of values stored on the trail.
 ///
 /// The type parameter `T` is the type of value stored on the trail, and the type parameter `M`
@@ -616,6 +624,14 @@ impl<M, T> fmt::Debug for Array<M, T> {
     }
 }
 
+impl<M, T> Eq for Array<M, T> {}
+
+impl<M, T> PartialEq for Array<M, T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.pointer == other.pointer
+    }
+}
+
 /// An iterator over the values of an `Array`.
 pub struct ArrayIter<'t, M, T> {
     trail: &'t Trail,
@@ -672,6 +688,14 @@ mod tests {
         }
 
         #[test]
+        fn clone_eq() {
+            let mut builder = TrailBuilder::new();
+            let value = BacktrackableValue::new(&mut builder, -1);
+
+            assert_eq!(value, value.clone());
+        }
+
+        #[test]
         fn get_set() {
             let init_val = 5;
             let new_val = 6;
@@ -721,6 +745,14 @@ mod tests {
                 format!("{:?}", array),
                 "Array { pointer: ArrayPointer { offset: 0, len: 4 } }"
             );
+        }
+
+        #[test]
+        fn clone_eq() {
+            let mut builder = TrailBuilder::new();
+            let array = BacktrackableArray::new(&mut builder, 0..10);
+
+            assert_eq!(array, array.clone());
         }
 
         #[test]
