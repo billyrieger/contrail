@@ -657,91 +657,121 @@ pub type NonBacktrackableArray<T> = Array<NonBacktrackable, T>;
 mod tests {
     use super::*;
 
-    #[test]
-    fn backtrackable_and_non_backtrackable_value() {
-        let init_val = 5;
-        let new_val = 6;
+    mod value {
+        use super::*;
 
-        let mut builder = TrailBuilder::new();
-        let backtrackable = BacktrackableValue::new(&mut builder, init_val);
-        let non_backtrackable = NonBacktrackableValue::new(&mut builder, init_val);
-        let mut trail = builder.finish();
+        #[test]
+        fn debug() {
+            let mut builder = TrailBuilder::new();
+            let value = BacktrackableValue::new(&mut builder, 42);
 
-        assert_eq!(trail.trail_len(), 0);
-        assert!(trail.is_trail_empty());
+            assert_eq!(
+                format!("{:?}", value),
+                "Value { pointer: Pointer { offset: 0 } }"
+            );
+        }
 
-        assert_eq!(backtrackable.get(&trail), init_val);
-        assert_eq!(non_backtrackable.get(&trail), init_val);
+        #[test]
+        fn get_set() {
+            let init_val = 5;
+            let new_val = 6;
 
-        trail.new_level();
-        assert_eq!(trail.trail_len(), 1);
-        assert!(!trail.is_trail_empty());
+            let mut builder = TrailBuilder::new();
+            let backtrackable = BacktrackableValue::new(&mut builder, init_val);
+            let non_backtrackable = NonBacktrackableValue::new(&mut builder, init_val);
+            let mut trail = builder.finish();
 
-        assert_eq!(backtrackable.get(&trail), init_val);
-        assert_eq!(non_backtrackable.get(&trail), init_val);
+            assert_eq!(trail.trail_len(), 0);
+            assert!(trail.is_trail_empty());
 
-        backtrackable.set(&mut trail, new_val);
-        non_backtrackable.set(&mut trail, new_val);
-
-        assert_eq!(backtrackable.get(&trail), new_val);
-        assert_eq!(non_backtrackable.get(&trail), new_val);
-
-        trail.backtrack();
-        assert_eq!(trail.trail_len(), 0);
-        assert!(trail.is_trail_empty());
-
-        assert_eq!(backtrackable.get(&trail), init_val);
-        assert_eq!(non_backtrackable.get(&trail), new_val);
-    }
-
-    #[test]
-    fn backtrackable_and_non_backtrackable_array() {
-        let init_vals = vec![1, 3, 5, 7];
-        let new_vals = vec![2, 4, 6, 8];
-
-        let mut builder = TrailBuilder::new();
-        let backtrackable = BacktrackableArray::new(&mut builder, init_vals.clone());
-        let stored = NonBacktrackableArray::new(&mut builder, init_vals.clone());
-        let mut trail = builder.finish();
-
-        assert_eq!(trail.trail_len(), 0);
-        assert!(trail.is_trail_empty());
-
-        for i in 0..4 {
-            assert_eq!(backtrackable.get(&trail, i), init_vals[i]);
-            assert_eq!(stored.get(&trail, i), init_vals[i]);
+            assert_eq!(backtrackable.get(&trail), init_val);
+            assert_eq!(non_backtrackable.get(&trail), init_val);
 
             trail.new_level();
             assert_eq!(trail.trail_len(), 1);
             assert!(!trail.is_trail_empty());
 
-            assert_eq!(backtrackable.get(&trail, i), init_vals[i]);
-            assert_eq!(stored.get(&trail, i), init_vals[i]);
+            assert_eq!(backtrackable.get(&trail), init_val);
+            assert_eq!(non_backtrackable.get(&trail), init_val);
 
-            backtrackable.set(&mut trail, i, new_vals[i]);
-            stored.set(&mut trail, i, new_vals[i]);
+            backtrackable.set(&mut trail, new_val);
+            non_backtrackable.set(&mut trail, new_val);
 
-            assert_eq!(backtrackable.get(&trail, i), new_vals[i]);
-            assert_eq!(stored.get(&trail, i), new_vals[i]);
+            assert_eq!(backtrackable.get(&trail), new_val);
+            assert_eq!(non_backtrackable.get(&trail), new_val);
 
             trail.backtrack();
             assert_eq!(trail.trail_len(), 0);
             assert!(trail.is_trail_empty());
 
-            assert_eq!(backtrackable.get(&trail, i), init_vals[i]);
-            assert_eq!(stored.get(&trail, i), new_vals[i]);
+            assert_eq!(backtrackable.get(&trail), init_val);
+            assert_eq!(non_backtrackable.get(&trail), new_val);
         }
     }
 
-    #[test]
-    fn array_iter() {
-        let vals = vec![1, 3, 5, 7, 9];
+    mod array {
+        use super::*;
 
-        let mut builder = TrailBuilder::new();
-        let array = BacktrackableArray::new(&mut builder, vals.clone());
-        let trail = builder.finish();
+        #[test]
+        fn debug() {
+            let mut builder = TrailBuilder::new();
+            let array = BacktrackableArray::new(&mut builder, vec![1, 2, 3, 4]);
 
-        let iter_vals = array.iter(&trail).collect::<Vec<_>>();
-        assert_eq!(iter_vals, vals);
+            assert_eq!(
+                format!("{:?}", array),
+                "Array { pointer: ArrayPointer { offset: 0, len: 4 } }"
+            );
+        }
+
+        #[test]
+        fn get_set() {
+            let init_vals = vec![1, 3, 5, 7];
+            let new_vals = vec![2, 4, 6, 8];
+
+            let mut builder = TrailBuilder::new();
+            let backtrackable = BacktrackableArray::new(&mut builder, init_vals.clone());
+            let stored = NonBacktrackableArray::new(&mut builder, init_vals.clone());
+            let mut trail = builder.finish();
+
+            assert_eq!(trail.trail_len(), 0);
+            assert!(trail.is_trail_empty());
+
+            for i in 0..4 {
+                assert_eq!(backtrackable.get(&trail, i), init_vals[i]);
+                assert_eq!(stored.get(&trail, i), init_vals[i]);
+
+                trail.new_level();
+                assert_eq!(trail.trail_len(), 1);
+                assert!(!trail.is_trail_empty());
+
+                assert_eq!(backtrackable.get(&trail, i), init_vals[i]);
+                assert_eq!(stored.get(&trail, i), init_vals[i]);
+
+                backtrackable.set(&mut trail, i, new_vals[i]);
+                stored.set(&mut trail, i, new_vals[i]);
+
+                assert_eq!(backtrackable.get(&trail, i), new_vals[i]);
+                assert_eq!(stored.get(&trail, i), new_vals[i]);
+
+                trail.backtrack();
+                assert_eq!(trail.trail_len(), 0);
+                assert!(trail.is_trail_empty());
+
+                assert_eq!(backtrackable.get(&trail, i), init_vals[i]);
+                assert_eq!(stored.get(&trail, i), new_vals[i]);
+            }
+        }
+
+        #[test]
+        fn iter() {
+            let vals = vec![1, 3, 5, 7, 9];
+
+            let mut builder = TrailBuilder::new();
+            let array = BacktrackableArray::new(&mut builder, vals.clone());
+            let trail = builder.finish();
+
+            let iter_vals = array.iter(&trail).collect::<Vec<_>>();
+            assert_eq!(iter_vals, vals);
+        }
     }
 }
