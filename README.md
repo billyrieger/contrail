@@ -5,7 +5,7 @@
 [![Documentation](https://docs.rs/contrail/badge.svg)](https://docs.rs/contrail)
 [![License](https://img.shields.io/github/license/billyrieger/contrail.svg)](https://github.com/billyrieger/contrail/blob/master/LICENSE)
 [![Lines of code](https://tokei.rs/b1/github/billyrieger/contrail)](https://github.com/Aaronepower/tokei)
-[![Coverage status](https://coveralls.io/repos/github/billyrieger/contrail/badge.svg)](https://coveralls.io/github/billyrieger/contrail)
+[![Coverage status](https://codecov.io/gh/billyrieger/contrail/branch/master/graphs/badge.svg)](https://codecov.io/gh/billyrieger/contrail/branch/master)
 
 ## License
 
