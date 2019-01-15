@@ -711,6 +711,14 @@ mod tests {
         }
 
         #[test]
+        fn clone_eq() {
+            let mut builder = MemoryBuilder::new();
+            let pointer = Pointer::new(&mut builder, 'B');
+
+            assert_eq!(pointer, pointer.clone());
+        }
+
+        #[test]
         fn get_set_update() {
             let mut builder = MemoryBuilder::new();
             let pointer = Pointer::new(&mut builder, 5);
@@ -743,6 +751,14 @@ mod tests {
                 format!("{:?}", offset_64),
                 "ArrayPointer { offset: 64, len: 1 }"
             );
+        }
+
+        #[test]
+        fn clone_eq() {
+            let mut builder = MemoryBuilder::new();
+            let pointer = ArrayPointer::new(&mut builder, &['R', 'U', 'S', 'T']);
+
+            assert_eq!(pointer, pointer.clone());
         }
 
         #[test]
