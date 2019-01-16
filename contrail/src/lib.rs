@@ -696,7 +696,7 @@ mod tests {
         }
 
         #[test]
-        fn get_set() {
+        fn get_set_roundtrip() {
             let init_val = 5;
             let new_val = 6;
 
@@ -769,7 +769,7 @@ mod tests {
         }
 
         #[test]
-        fn get_set() {
+        fn get_set_roundtrip() {
             let init_vals = vec![1, 3, 5, 7];
             let new_vals = vec![2, 4, 6, 8];
 
@@ -843,6 +843,21 @@ mod tests {
 
             assert_eq!(not_empty.len(), 1);
             assert!(!not_empty.is_empty());
+        }
+
+        #[test]
+        fn swap() {
+            let mut builder = TrailBuilder::new();
+            let array = BacktrackableArray::new(&mut builder, vec![-1, 1]);
+            let mut trail = builder.finish();
+
+            assert_eq!(array.get(&mut trail, 0), -1);
+            assert_eq!(array.get(&mut trail, 1), 1);
+
+            array.swap(&mut trail, 0, 1);
+
+            assert_eq!(array.get(&mut trail, 0), 1);
+            assert_eq!(array.get(&mut trail, 1), -1);
         }
     }
 }
