@@ -274,7 +274,7 @@ where
     ///
     /// assert_eq!(pi.get(&memory), 3.14);
     /// ```
-    #[inline(always)]
+    #[inline]
     pub fn get(self, memory: &Memory) -> T {
         unsafe {
             T::read_bytes(
@@ -299,7 +299,7 @@ where
     /// letter.set(&mut memory, 'z');
     /// assert_eq!(letter.get(&memory), 'z');
     /// ```
-    #[inline(always)]
+    #[inline]
     pub fn set(self, memory: &mut Memory, val: T) {
         unsafe {
             val.write_bytes(
@@ -324,7 +324,7 @@ where
     /// side.update(&mut memory, |x| x * x);
     /// assert_eq!(side.get(&memory), 25);
     /// ```
-    #[inline(always)]
+    #[inline]
     pub fn update(self, memory: &mut Memory, f: impl FnOnce(T) -> T) {
         self.set(memory, f(self.get(memory)));
     }
@@ -447,7 +447,7 @@ where
     ///
     /// assert_eq!(array.len(), 5);
     /// ```
-    #[inline(always)]
+    #[inline]
     pub fn len(&self) -> usize {
         self.len
     }
@@ -470,7 +470,7 @@ where
     /// assert_eq!(empty.is_empty(), true);
     /// assert_eq!(not_empty.is_empty(), false);
     /// ```
-    #[inline(always)]
+    #[inline]
     pub fn is_empty(&self) -> bool {
         self.len == 0
     }
@@ -488,7 +488,7 @@ where
     ///
     /// assert_eq!(doubles.get(&memory, 2), 4);
     /// ```
-    #[inline(always)]
+    #[inline]
     pub fn get(&self, memory: &Memory, i: usize) -> T {
         assert!(i < self.len, "array index out of bounds");
         let mem_offset = self.offset + i * T::LENGTH;
@@ -517,7 +517,7 @@ where
     /// letters.set(&mut memory, 1, 'z');
     /// assert_eq!(letters.get(&memory, 1), 'z');
     /// ```
-    #[inline(always)]
+    #[inline]
     pub fn set(&self, memory: &mut Memory, i: usize, val: T) {
         assert!(i < self.len, "array index out of bounds");
         let mem_offset = self.offset + i * T::LENGTH;
@@ -546,7 +546,7 @@ where
     /// truth_table.update(&mut memory, 3, |x| !x);
     /// assert_eq!(truth_table.get(&memory, 3), true);
     /// ```
-    #[inline(always)]
+    #[inline]
     pub fn update(&self, memory: &mut Memory, i: usize, f: impl FnOnce(T) -> T) {
         self.set(memory, i, f(self.get(memory, i)));
     }
@@ -570,7 +570,7 @@ where
     /// assert_eq!(digits.get(&memory, 1), 1);
     /// assert_eq!(digits.get(&memory, 2), 4);
     /// ```
-    #[inline(always)]
+    #[inline]
     pub fn swap(&self, memory: &mut Memory, i: usize, j: usize) {
         let temp_i = self.get(memory, i);
         self.set(memory, i, self.get(memory, j));
@@ -613,7 +613,7 @@ macro_rules! impl_bytes_primitive {
             impl Bytes for $T {
                 const LENGTH: usize = std::mem::size_of::<$T>();
 
-                #[inline(always)]
+                #[inline]
                 unsafe fn read_bytes(bytes: &[u8]) -> $T {
                     // safe assuming that the length of the byte slice is Self::LENGTH.
                     let byte_array = *(bytes.as_ptr() as *const [u8; std::mem::size_of::<$T>()]);
@@ -621,7 +621,7 @@ macro_rules! impl_bytes_primitive {
                     std::mem::transmute::<[u8; std::mem::size_of::<$T>()], $T>(byte_array)
                 }
 
-                #[inline(always)]
+                #[inline]
                 unsafe fn write_bytes(self, bytes: &mut [u8]) {
                     // safe for Copy + 'static types
                     let byte_array = std::mem::transmute::<$T, [u8; std::mem::size_of::<$T>()]>(self);

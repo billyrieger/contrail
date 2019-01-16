@@ -55,17 +55,17 @@ pub trait StorageMode {
 pub struct Backtrackable;
 
 impl StorageMode for Backtrackable {
-    #[inline(always)]
+    #[inline]
     fn builder_mut(builder: &mut TrailBuilder) -> &mut MemoryBuilder {
         &mut builder.backtrackable_mem
     }
 
-    #[inline(always)]
+    #[inline]
     fn memory(trail: &Trail) -> &Memory {
         &trail.backtrackable_mem
     }
 
-    #[inline(always)]
+    #[inline]
     fn memory_mut(trail: &mut Trail) -> &mut Memory {
         &mut trail.backtrackable_mem
     }
@@ -102,17 +102,17 @@ impl StorageMode for Backtrackable {
 pub struct NonBacktrackable;
 
 impl StorageMode for NonBacktrackable {
-    #[inline(always)]
+    #[inline]
     fn builder_mut(builder: &mut TrailBuilder) -> &mut MemoryBuilder {
         &mut builder.non_backtrackable_mem
     }
 
-    #[inline(always)]
+    #[inline]
     fn memory(trail: &Trail) -> &Memory {
         &trail.non_backtrackable_mem
     }
 
-    #[inline(always)]
+    #[inline]
     fn memory_mut(trail: &mut Trail) -> &mut Memory {
         &mut trail.non_backtrackable_mem
     }

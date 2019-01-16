@@ -344,7 +344,7 @@ where
     ///
     /// assert_eq!(value.get(&trail), 5);
     /// ```
-    #[inline(always)]
+    #[inline]
     pub fn get(self, trail: &Trail) -> T {
         self.pointer.get(M::memory(trail))
     }
@@ -363,7 +363,7 @@ where
     /// value.set(&mut trail, 42);
     /// assert_eq!(value.get(&trail), 42);
     /// ```
-    #[inline(always)]
+    #[inline]
     pub fn set(self, trail: &mut Trail, new_val: T) {
         self.pointer.set(M::memory_mut(trail), new_val);
     }
@@ -382,7 +382,7 @@ where
     /// value.update(&mut trail, |x| x * x);
     /// assert_eq!(value.get(&trail), 25);
     /// ```
-    #[inline(always)]
+    #[inline]
     pub fn update(self, trail: &mut Trail, f: impl FnOnce(T) -> T) {
         self.pointer.update(M::memory_mut(trail), f);
     }
@@ -473,7 +473,7 @@ where
     ///
     /// assert_eq!(array.len(), 8);
     /// ```
-    #[inline(always)]
+    #[inline]
     pub fn len(&self) -> usize {
         self.pointer.len()
     }
@@ -492,7 +492,7 @@ where
     /// assert_eq!(empty.is_empty(), true);
     /// assert_eq!(not_empty.is_empty(), false);
     /// ```
-    #[inline(always)]
+    #[inline]
     pub fn is_empty(&self) -> bool {
         self.pointer.len() == 0
     }
@@ -533,7 +533,7 @@ where
     ///
     /// assert_eq!(array.get(&trail, 4), 4);
     /// ```
-    #[inline(always)]
+    #[inline]
     pub fn get(&self, trail: &Trail, i: usize) -> T {
         self.pointer.get(M::memory(trail), i)
     }
@@ -554,7 +554,7 @@ where
     /// array.set(&mut trail, 4, -23);
     /// assert_eq!(array.get(&trail, 4), -23);
     /// ```
-    #[inline(always)]
+    #[inline]
     pub fn set(&self, trail: &mut Trail, i: usize, new_val: T) {
         self.pointer.set(M::memory_mut(trail), i, new_val);
     }
@@ -575,7 +575,7 @@ where
     /// array.update(&mut trail, 4, |x| x * x);
     /// assert_eq!(array.get(&trail, 4), 16);
     /// ```
-    #[inline(always)]
+    #[inline]
     pub fn update(&self, trail: &mut Trail, i: usize, f: impl FnOnce(T) -> T) {
         self.pointer.update(M::memory_mut(trail), i, f);
     }
@@ -599,7 +599,7 @@ where
     /// assert_eq!(array.get(&trail, 2), 's');
     /// assert_eq!(array.get(&trail, 3), 't');
     /// ```
-    #[inline(always)]
+    #[inline]
     pub fn swap(&self, trail: &mut Trail, i: usize, j: usize) {
         self.pointer.swap(M::memory_mut(trail), i, j);
     }

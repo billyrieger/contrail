@@ -34,19 +34,19 @@ where
         Self { blocks, max }
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn clear(&self, trail: &mut Trail) {
         for i in 0..self.blocks.len() {
             self.blocks.set(trail, i, 0);
         }
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn len(&self) -> u64 {
         self.max + 1
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn insert(&self, trail: &mut Trail, value: u64) {
         if value <= self.max {
             let index = (value / BLOCK_SIZE) as usize;
@@ -56,7 +56,7 @@ where
         }
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn contains(&self, trail: &Trail, value: u64) -> bool {
         if value > self.max {
             false
@@ -67,7 +67,7 @@ where
         }
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn remove(&self, trail: &mut Trail, value: u64) {
         if value <= self.max {
             let index = (value / BLOCK_SIZE) as usize;
@@ -77,7 +77,7 @@ where
         }
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn count_between(&self, trail: &Trail, min: u64, max: u64) -> u64 {
         if min <= max && min <= self.max {
             let max = max.min(self.max);
@@ -108,7 +108,7 @@ where
         }
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn next_above(&self, trail: &Trail, value: u64) -> Option<u64> {
         if value > self.max {
             None
@@ -127,7 +127,7 @@ where
         }
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn next_below(&self, trail: &Trail, value: u64) -> Option<u64> {
         let value = value.min(self.max);
         let block = value / BLOCK_SIZE;
