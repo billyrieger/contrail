@@ -831,5 +831,18 @@ mod tests {
             let iter_vals = array.iter(&trail).collect::<Vec<_>>();
             assert_eq!(iter_vals, vals);
         }
+
+        #[test]
+        fn empty() {
+            let mut builder = TrailBuilder::new();
+            let empty = BacktrackableArray::new(&mut builder, 0..0);
+            let not_empty = BacktrackableArray::new(&mut builder, 0..1);
+
+            assert_eq!(empty.len(), 0);
+            assert!(empty.is_empty());
+
+            assert_eq!(not_empty.len(), 1);
+            assert!(!not_empty.is_empty());
+        }
     }
 }
