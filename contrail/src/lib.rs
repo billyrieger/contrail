@@ -731,6 +731,19 @@ mod tests {
             assert_eq!(backtrackable.get(&trail), init_val);
             assert_eq!(non_backtrackable.get(&trail), new_val);
         }
+
+        #[test]
+        fn update() {
+            let mut builder = TrailBuilder::new();
+            let value = BacktrackableValue::new(&mut builder, 0);
+            let mut trail = builder.finish();
+
+            assert_eq!(value.get(&trail), 0);
+
+            value.update(&mut trail, |x| x + 1);
+
+            assert_eq!(value.get(&trail), 1);
+        }
     }
 
     mod array {
@@ -792,6 +805,19 @@ mod tests {
                 assert_eq!(backtrackable.get(&trail, i), init_vals[i]);
                 assert_eq!(stored.get(&trail, i), new_vals[i]);
             }
+        }
+
+        #[test]
+        fn update() {
+            let mut builder = TrailBuilder::new();
+            let array = BacktrackableArray::new(&mut builder, 0..10);
+            let mut trail = builder.finish();
+
+            assert_eq!(array.get(&trail, 5), 5);
+
+            array.update(&mut trail, 5, |x| x * 2);
+
+            assert_eq!(array.get(&trail, 5), 10);
         }
 
         #[test]
