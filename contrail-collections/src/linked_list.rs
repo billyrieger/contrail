@@ -23,82 +23,6 @@ pub struct LinkedListNode<M, T> {
     index: usize,
 }
 
-impl<M, T> Clone for LinkedListNode<M, T> {
-    fn clone(&self) -> Self {
-        Self {
-            prev: self.prev,
-            next: self.next,
-            data: self.data,
-            index: self.index,
-        }
-    }
-}
-
-impl<M, T> Copy for LinkedListNode<M, T> {}
-
-impl<M, T> fmt::Debug for LinkedListNode<M, T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("LinkedListNode")
-            .field("index", &self.index)
-            .finish()
-    }
-}
-
-impl<M, T> Eq for LinkedListNode<M, T> {}
-
-impl<M, T> PartialEq for LinkedListNode<M, T> {
-    fn eq(&self, other: &Self) -> bool {
-        self.index == other.index
-    }
-}
-
-pub struct LinkedListArena<M, T> {
-    prev: Array<M, usize>,
-    next: Array<M, usize>,
-    data: Array<M, T>,
-}
-
-impl<M, T> LinkedListArena<M, T>
-where
-    M: StorageMode,
-    T: Bytes,
-{
-    pub fn new(builder: &mut TrailBuilder, data: Vec<T>) -> Self {
-        Self {
-            prev: Array::new(builder, 0..data.len()),
-            next: Array::new(builder, 0..data.len()),
-            data: Array::new(builder, data),
-        }
-    }
-
-    pub fn node(&self, i: usize) -> LinkedListNode<M, T> {
-        LinkedListNode {
-            prev: self.prev,
-            next: self.next,
-            data: self.data,
-            index: i,
-        }
-    }
-}
-
-impl<M, T> Clone for LinkedListArena<M, T> {
-    fn clone(&self) -> Self {
-        Self {
-            prev: self.prev,
-            next: self.next,
-            data: self.data,
-        }
-    }
-}
-
-impl<M, T> Copy for LinkedListArena<M, T> {}
-
-impl<M, T> fmt::Debug for LinkedListArena<M, T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("LinkedListArena").finish()
-    }
-}
-
 impl<M, T> LinkedListNode<M, T>
 where
     M: StorageMode,
@@ -179,9 +103,139 @@ where
     }
 }
 
+impl<M, T> Clone for LinkedListNode<M, T> {
+    fn clone(&self) -> Self {
+        Self {
+            prev: self.prev,
+            next: self.next,
+            data: self.data,
+            index: self.index,
+        }
+    }
+}
+
+impl<M, T> Copy for LinkedListNode<M, T> {}
+
+impl<M, T> fmt::Debug for LinkedListNode<M, T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("LinkedListNode")
+            .field("index", &self.index)
+            .finish()
+    }
+}
+
+impl<M, T> Eq for LinkedListNode<M, T> {}
+
+impl<M, T> PartialEq for LinkedListNode<M, T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.index == other.index
+    }
+}
+
+pub struct LinkedListArena<M, T> {
+    prev: Array<M, usize>,
+    next: Array<M, usize>,
+    data: Array<M, T>,
+}
+
+impl<M, T> LinkedListArena<M, T>
+where
+    M: StorageMode,
+    T: Bytes,
+{
+    pub fn new(builder: &mut TrailBuilder, data: Vec<T>) -> Self {
+        Self {
+            prev: Array::new(builder, 0..data.len()),
+            next: Array::new(builder, 0..data.len()),
+            data: Array::new(builder, data),
+        }
+    }
+
+    pub fn node(&self, i: usize) -> LinkedListNode<M, T> {
+        LinkedListNode {
+            prev: self.prev,
+            next: self.next,
+            data: self.data,
+            index: i,
+        }
+    }
+}
+
+impl<M, T> Clone for LinkedListArena<M, T> {
+    fn clone(&self) -> Self {
+        Self {
+            prev: self.prev,
+            next: self.next,
+            data: self.data,
+        }
+    }
+}
+
+impl<M, T> Copy for LinkedListArena<M, T> {}
+
+impl<M, T> fmt::Debug for LinkedListArena<M, T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("LinkedListArena").finish()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    mod node {
+        use super::*;
+
+        #[test]
+        fn debug() {
+            let mut builder = TrailBuilder::new();
+            let arena =
+                NonBacktrackableLinkedListArena::new(&mut builder, (0..2).map(|_| ()).collect());
+
+            let node0 = arena.node(0);
+            let node1 = arena.node(1);
+
+            assert_eq!(format!("{:?}", node0), "LinkedListNode { index: 0 }");
+            assert_eq!(format!("{:?}", node1), "LinkedListNode { index: 1 }");
+        }
+
+        #[test]
+        fn clone_eq() {
+            let mut builder = TrailBuilder::new();
+            let arena =
+                NonBacktrackableLinkedListArena::new(&mut builder, (0..2).map(|_| ()).collect());
+
+            let node = arena.node(0);
+            let node_clone = node.clone();
+            assert_eq!(node, node_clone);
+        }
+
+    }
+
+    mod arena {
+        use super::*;
+
+        #[test]
+        fn debug() {
+            let mut builder = TrailBuilder::new();
+            let arena =
+                NonBacktrackableLinkedListArena::new(&mut builder, (0..2).map(|_| ()).collect());
+
+            assert_eq!(format!("{:?}", arena), "LinkedListArena");
+        }
+
+        #[test]
+        fn clone() {
+            let mut builder = TrailBuilder::new();
+            let arena =
+                NonBacktrackableLinkedListArena::new(&mut builder, (0..2).map(|_| ()).collect());
+
+            let arena_clone = arena.clone();
+
+            assert_eq!(arena.node(1), arena_clone.node(1));
+        }
+
+    }
 
     #[test]
     fn unlink() {
