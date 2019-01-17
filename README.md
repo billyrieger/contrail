@@ -7,7 +7,7 @@
 
 ## License
 
-`contrail` is licensed under the Mozilla Public License version 2.0.  See the
-[license file](https://github.com/billyrieger/contrail/blob/master/LICENSE) and
-the [MPL 2.0 FAQ](https://www.mozilla.org/en-US/MPL/2.0/FAQ/) for more
-information.
+`contrail`, `contrail-collections`, and `contrail-derive` are licensed under
+the Mozilla Public License version 2.0.  See the [license
+file](https://github.com/billyrieger/contrail/blob/master/LICENSE) and the [MPL
+2.0 FAQ](https://www.mozilla.org/en-US/MPL/2.0/FAQ/) for more information.
