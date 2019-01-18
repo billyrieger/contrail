@@ -4,14 +4,14 @@
  * obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//! Simple state management for backtracking search algorithms.
+//! Simple state restoration for backtracking search algorithms using a trail.
 //!
 //! During a typical branching search algorithm, the search state must be cloned at each branch
 //! point in order to explore the branches independently. `contrail` provides a framework to create
 //! search algorithms that only require a partial clone of the search state at each branch point.
 //! This is facilitated by the [_trail_](Trail), a struct where all search state is stored.
 //!
-//! This library is heavily based on the memory model used by
+//! This library is based on the memory model used by
 //! [Minion](https://constraintmodelling.org/minion/), a C++ constraint satisfaction problem
 //! solver.
 //!
@@ -20,6 +20,8 @@
 //! A `Value` or an `Array` is only usable with the `Trail` from the `TrailBuilder` used to create
 //! it. For instance, if there are multiple trails, it's undefined behavior to use a `Value`
 //! created from one trail with another trail.
+#![doc(html_root_url = "https://docs.rs/contrail/0.3.8")]
+
 #[allow(unused_imports)]
 #[macro_use]
 extern crate contrail_derive;
@@ -49,7 +51,7 @@ use crate::{
 ///
 /// When designing data structures using the trail, try to store as much as possible in
 /// non-backtrackable storage. This will make calls to `new_level()` and `backtrack()` more
-/// efficient.
+/// efficient as less data will need to be cloned.
 ///
 /// # Examples
 ///

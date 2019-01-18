@@ -1,11 +1,21 @@
 [package]
 name = "contrail"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Billy Rieger <wrieger@protonmail.com>"]
+description = "Simple state restoration for backtracking search algorithms using a trail."
+license = "MPL-2.0"
 edition = "2018"
+categories = ["algorithms", "data-structures", "memory-management"]
+keywords = ["search", "state", "restoration", "memory"]
+
+# urls
+homepage = "https://github.com/billyrieger/contrail/tree/master/contrail"
+repository = "https://github.com/billyrieger/contrail"
+readme = "README.md"
 
 [dependencies]
 contrail-derive = { path = "../contrail-derive/" }
 
 [dev-dependencies]
-rand = "0.6.1"
+rand = "0.6"
+version-sync = "0.7"
