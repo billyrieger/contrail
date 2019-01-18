@@ -4,14 +4,17 @@
 [![Documentation](https://docs.rs/contrail/badge.svg)](https://docs.rs/contrail)
 [![License](https://img.shields.io/github/license/billyrieger/contrail.svg)](https://github.com/billyrieger/contrail/blob/master/LICENSE)
 
-_Simple state restoration for backtracking search algorithms using a trail._
+Simple state restoration for backtracking search algorithms using a trail.
 
 ## Usage
 
 To use `contrail`, add the following to your `Cargo.toml`:
+
 ```
 contrail = "0.2"
 ```
+
+See [the documentation](https://docs.rs/contrail) for API usage.
 
 ## License
 

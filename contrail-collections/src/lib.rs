@@ -4,6 +4,8 @@
  * obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+#![doc(html_root_url = "https://docs.rs/contrail-collections/0.1.0")]
+
 pub mod bit_set;
 pub mod linked_list;
 pub mod sparse_set;

@@ -5,8 +5,8 @@ authors = ["Billy Rieger <wrieger@protonmail.com>"]
 description = "Simple state restoration for backtracking search algorithms using a trail."
 license = "MPL-2.0"
 edition = "2018"
-categories = ["algorithms", "data-structures", "memory-management"]
-keywords = ["search", "state", "restoration", "memory"]
+categories = ["algorithms", "memory-management"]
+keywords = ["search", "state", "restoration", "memory", "trail"]
 
 # urls
 homepage = "https://github.com/billyrieger/contrail/tree/master/contrail"
