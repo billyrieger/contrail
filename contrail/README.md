@@ -6,6 +6,13 @@
 
 _Simple state restoration for backtracking search algorithms using a trail._
 
+## Usage
+
+To use `contrail`, add the following to your `Cargo.toml`:
+```
+contrail = "0.2"
+```
+
 ## License
 
 `contrail` is licensed under the Mozilla Public License version 2.0.  See the

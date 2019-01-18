@@ -20,7 +20,7 @@
 //! A `Value` or an `Array` is only usable with the `Trail` from the `TrailBuilder` used to create
 //! it. For instance, if there are multiple trails, it's undefined behavior to use a `Value`
 //! created from one trail with another trail.
-#![doc(html_root_url = "https://docs.rs/contrail/0.3.8")]
+#![doc(html_root_url = "https://docs.rs/contrail/0.2.0")]
 
 #[allow(unused_imports)]
 #[macro_use]
