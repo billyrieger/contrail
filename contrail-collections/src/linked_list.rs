@@ -152,6 +152,7 @@ where
     }
 
     pub fn node(&self, i: usize) -> LinkedListNode<M, T> {
+        assert!(i < self.data.len(), "node index out of bounds");
         LinkedListNode {
             prev: self.prev,
             next: self.next,
@@ -209,7 +210,6 @@ mod tests {
             let node_clone = node.clone();
             assert_eq!(node, node_clone);
         }
-
     }
 
     mod arena {
@@ -235,6 +235,19 @@ mod tests {
             assert_eq!(arena.node(1), arena_clone.node(1));
         }
 
+    }
+
+    #[test]
+    fn get_set_data() {
+        let mut builder = TrailBuilder::new();
+        let arena = BacktrackableLinkedListArena::new(&mut builder, (10..15).collect());
+        let mut trail = builder.finish();
+
+        let node = arena.node(3);
+        assert_eq!(node.data(&trail), 13);
+
+        node.set_data(&mut trail, 23);
+        assert_eq!(node.data(&trail), 23);
     }
 
     #[test]

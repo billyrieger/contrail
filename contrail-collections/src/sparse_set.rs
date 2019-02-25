@@ -12,9 +12,10 @@ use contrail::{
 pub type BacktrackableSparseSet = SparseSet<Backtrackable>;
 pub type NonBacktrackableSparseSet = SparseSet<NonBacktrackable>;
 
-/// A specialized backtrackable data structure for storing subsets of the range `0..n`.
+/// A specialized backtrackable data structure for storing subsets of the range `0..n` that can
+/// only decrease in size.
 ///
-/// Features O(1) `contains` and `remove`.
+/// Features O(1) `contains` and `remove` as well as fast value iteration.
 #[derive(Clone, Copy, Debug)]
 pub struct SparseSet<M> {
     values: NonBacktrackableArray<usize>,
@@ -48,8 +49,7 @@ where
         }
     }
 
-    /// Returns an iterator over the elements of the `SparseSet` in arbitrary
-    /// order.
+    /// Returns an iterator over the elements of the `SparseSet` in arbitrary order.
     ///
     /// # Examples
     ///
@@ -70,11 +70,8 @@ where
     ///     assert!(value != 2 && value != 3 && value != 6);
     /// }
     /// ```
-    #[inline]
     pub fn iter<'s, 't: 's>(&'s self, trail: &'t Trail) -> impl Iterator<Item = usize> + 's {
-        (0..self.values.len())
-            .map(move |i| self.values.get(trail, i))
-            .take(self.len.get(trail))
+        (0..self.len.get(trail)).map(move |i| self.values.get(trail, i))
     }
 
     /// Returns the length of the `SparseSet`.
@@ -95,22 +92,18 @@ where
     ///
     /// assert_eq!(sparse_set.len(&trail), 9);
     /// ```
-    #[inline]
     pub fn len(&self, trail: &Trail) -> usize {
         self.len.get(trail)
     }
 
-    #[inline]
     pub fn is_empty(&self, trail: &Trail) -> bool {
         self.len.get(trail) == 0
     }
 
-    #[inline]
     pub fn contains(&self, trail: &Trail, val: usize) -> bool {
         val < self.positions.len() && self.positions.get(trail, val) < self.len.get(trail)
     }
 
-    #[inline]
     pub fn remove(&self, trail: &mut Trail, val: usize) {
         if self.contains(trail, val) {
             let position = self.positions.get(trail, val);
@@ -176,7 +169,6 @@ where
     /// values.sort();
     /// assert_eq!(values, vec![0, 1, 2, 3, 5, 8]);
     /// ```
-    #[inline]
     pub fn intersect(&self, trail: &mut Trail, vals: impl IntoIterator<Item = usize>) {
         let mut vals = vals.into_iter().collect::<Vec<_>>();
         vals.sort();
@@ -192,7 +184,6 @@ where
         self.len.set(trail, new_size);
     }
 
-    #[inline]
     fn swap(&self, trail: &mut Trail, i: usize, j: usize) {
         let val_i = self.values.get(trail, i);
         let val_j = self.values.get(trail, j);
