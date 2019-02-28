@@ -3,10 +3,7 @@
 [![Build status](https://api.travis-ci.com/billyrieger/contrail.svg)](https://travis-ci.com/billyrieger/contrail)
 [![Coverage](https://img.shields.io/codecov/c/github/billyrieger/contrail.svg)](https://codecov.io/gh/billyrieger/smeagol/branch/master)
 [![Lines of code](https://tokei.rs/b1/github/billyrieger/contrail)](https://github.com/Aaronepower/tokei)
-[![Version](https://img.shields.io/crates/v/contrail.svg)](https://crates.io/crates/contrail)
-[![Documentation](https://docs.rs/contrail/badge.svg)](https://docs.rs/contrail/)
 [![License](https://img.shields.io/github/license/billyrieger/contrail.svg)](https://github.com/billyrieger/contrail/blob/master/LICENSE)
-[![Dependency status](https://deps.rs/repo/github/billyrieger/contrail/status.svg)](https://deps.rs/repo/github/billyrieger/contrail)
 [![Rust version](https://img.shields.io/badge/rust-stable-lightgrey.svg)](https://www.rust-lang.org/)
 
 ## License
