@@ -9,7 +9,10 @@ use contrail::{
     NonBacktrackableArray, Trail, TrailBuilder, Value,
 };
 
+/// A sparse set stored on the trail in backtrackable memory.
 pub type BacktrackableSparseSet = SparseSet<Backtrackable>;
+
+/// A sparse set stored on the trail in non-backtrackable memory.
 pub type NonBacktrackableSparseSet = SparseSet<NonBacktrackable>;
 
 /// A specialized backtrackable data structure for storing subsets of the range `0..n` that can
@@ -97,14 +100,66 @@ where
     }
 
     /// Returns true if the sparse set is empty and false otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use contrail::TrailBuilder;
+    /// use contrail_collections::sparse_set::BacktrackableSparseSet;
+    ///
+    /// let mut builder = TrailBuilder::new();
+    /// let sparse_set = BacktrackableSparseSet::new_full(&mut builder, 1);
+    /// let mut trail = builder.finish();
+    ///
+    /// assert!(!sparse_set.is_empty(&trail));
+    ///
+    /// sparse_set.remove(&mut trail, 0);
+    ///
+    /// assert!(sparse_set.is_empty(&trail));
+    /// ```
     pub fn is_empty(&self, trail: &Trail) -> bool {
         self.len.get(trail) == 0
     }
 
+    /// Checks if the sparse set contains the given value.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use contrail::TrailBuilder;
+    /// use contrail_collections::sparse_set::BacktrackableSparseSet;
+    ///
+    /// let mut builder = TrailBuilder::new();
+    /// let sparse_set = BacktrackableSparseSet::new_full(&mut builder, 10);
+    /// let mut trail = builder.finish();
+    ///
+    /// assert!(sparse_set.contains(&trail, 5));
+    /// assert!(!sparse_set.contains(&trail, 15));
+    /// ```
     pub fn contains(&self, trail: &Trail, val: usize) -> bool {
         val < self.positions.len() && self.positions.get(trail, val) < self.len.get(trail)
     }
 
+    /// Removes a value from the sparse set.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use contrail::TrailBuilder;
+    /// use contrail_collections::sparse_set::BacktrackableSparseSet;
+    ///
+    /// let mut builder = TrailBuilder::new();
+    /// let sparse_set = BacktrackableSparseSet::new_full(&mut builder, 10);
+    /// let mut trail = builder.finish();
+    ///
+    /// assert!(sparse_set.contains(&trail, 5));
+    /// assert_eq!(sparse_set.len(&trail), 10);
+    ///
+    /// sparse_set.remove(&mut trail, 5);
+    ///
+    /// assert!(!sparse_set.contains(&trail, 5));
+    /// assert_eq!(sparse_set.len(&trail), 9);
+    /// ```
     pub fn remove(&self, trail: &mut Trail, val: usize) {
         if self.contains(trail, val) {
             let position = self.positions.get(trail, val);
@@ -185,6 +240,7 @@ where
         self.len.set(trail, new_size);
     }
 
+    /// Swaps two positions in the sparse set.
     fn swap(&self, trail: &mut Trail, i: usize, j: usize) {
         let val_i = self.values.get(trail, i);
         let val_j = self.values.get(trail, j);
@@ -200,23 +256,65 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-
     use contrail::TrailBuilder;
 
     #[test]
-    fn basic() {
+    fn iter() {
         let mut builder = TrailBuilder::new();
-
-        let set = BacktrackableSparseSet::new_full(&mut builder, 10);
+        let sparse_set = BacktrackableSparseSet::new_full(&mut builder, 6);
         let mut trail = builder.finish();
 
-        trail.new_level();
+        sparse_set.remove(&mut trail, 1);
+        sparse_set.remove(&mut trail, 3);
+        sparse_set.remove(&mut trail, 5);
 
-        assert_eq!(set.len(&trail), 10);
+        let mut values = sparse_set.iter(&trail).collect::<Vec<_>>();
+        values.sort();
+        assert_eq!(values, &[0, 2, 4]);
     }
 
     #[test]
-    fn test() {
+    fn is_empty() {
+        let mut builder = TrailBuilder::new();
+        let empty = BacktrackableSparseSet::new_full(&mut builder, 0);
+        let not_empty = BacktrackableSparseSet::new_full(&mut builder, 1);
+        let trail = builder.finish();
+
+        assert_eq!(empty.len(&trail), 0);
+        assert!(empty.is_empty(&trail));
+
+        assert_eq!(not_empty.len(&trail), 1);
+        assert!(!not_empty.is_empty(&trail));
+    }
+
+    #[test]
+    fn filter() {
+        let mut builder = TrailBuilder::new();
+        let sparse_set = BacktrackableSparseSet::new_full(&mut builder, 10);
+        let mut trail = builder.finish();
+
+        sparse_set.filter(&mut trail, |x| x % 2 == 1);
+
+        let mut values = sparse_set.iter(&trail).collect::<Vec<_>>();
+        values.sort();
+        assert_eq!(values, vec![1, 3, 5, 7, 9]);
+    }
+
+    #[test]
+    fn intersect() {
+        let mut builder = TrailBuilder::new();
+        let sparse_set = BacktrackableSparseSet::new_full(&mut builder, 10);
+        let mut trail = builder.finish();
+
+        sparse_set.intersect(&mut trail, vec![0, 1, 1, 2, 3, 5, 8, 13]);
+
+        let mut values = sparse_set.iter(&trail).collect::<Vec<_>>();
+        values.sort();
+        assert_eq!(values, vec![0, 1, 2, 3, 5, 8]);
+    }
+
+    #[test]
+    fn backtrack() {
         let mut builder = TrailBuilder::new();
 
         // 0..5
