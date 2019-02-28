@@ -1,7 +1,7 @@
 # contrail
 
 [![Build status](https://api.travis-ci.com/billyrieger/contrail.svg)](https://travis-ci.com/billyrieger/contrail)
-[![Coverage](https://codecov.io/gh/billyrieger/contrail/branch/master/graphs/badge.svg)](https://codecov.io/gh/billyrieger/contrail/branch/master)
+[![Coverage](https://img.shields.io/codecov/c/github/billyrieger/contrail.svg)](https://codecov.io/gh/billyrieger/smeagol/branch/master)
 [![Lines of code](https://tokei.rs/b1/github/billyrieger/contrail)](https://github.com/Aaronepower/tokei)
 [![Version](https://img.shields.io/crates/v/contrail.svg)](https://crates.io/crates/contrail)
 [![Documentation](https://docs.rs/contrail/badge.svg)](https://docs.rs/contrail/)
