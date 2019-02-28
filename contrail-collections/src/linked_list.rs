@@ -28,6 +28,7 @@ where
     M: StorageMode,
     T: Bytes,
 {
+    /// Gets the data associated with this node from the trail.
     pub fn data(&self, trail: &Trail) -> T {
         self.data.get(trail, self.index)
     }

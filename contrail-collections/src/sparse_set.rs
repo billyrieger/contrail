@@ -96,6 +96,7 @@ where
         self.len.get(trail)
     }
 
+    /// Returns true if the sparse set is empty and false otherwise.
     pub fn is_empty(&self, trail: &Trail) -> bool {
         self.len.get(trail) == 0
     }
