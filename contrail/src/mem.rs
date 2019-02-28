@@ -477,6 +477,10 @@ where
 
     /// Gets the value of the given index of the array pointer from memory.
     ///
+    /// # Panics
+    ///
+    /// Panics if `i >= self.len()`.
+    ///
     /// # Examples
     ///
     /// ```
@@ -502,6 +506,10 @@ where
     }
 
     /// Sets the value of the given index of the array pointer in memory.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `i >= self.len()`.
     ///
     /// # Examples
     ///
@@ -532,6 +540,10 @@ where
 
     /// Updates the value of the given index in memory using the given function.
     ///
+    /// # Panics
+    ///
+    /// Panics if `i >= self.len()`.
+    ///
     /// # Examples
     ///
     /// ```
@@ -552,6 +564,10 @@ where
     }
 
     /// Swaps the values in memory of two indices of the array pointer.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `i >= self.len()` or `j >= self.len()`.
     ///
     /// # Examples
     ///

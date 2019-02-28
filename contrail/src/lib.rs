@@ -15,11 +15,10 @@
 //! [Minion](https://constraintmodelling.org/minion/), a C++ constraint satisfaction problem
 //! solver.
 //!
-//! # Warning
+//! # Limitations
 //!
-//! A `Value` or an `Array` is only usable with the `Trail` from the `TrailBuilder` used to create
-//! it. For instance, if there are multiple trails, it's undefined behavior to use a `Value`
-//! created from one trail with another trail.
+//! The main limitation of contrail is that once a trail has been created using a trail builder,
+//! nothing can be added to the trail. This is to prevent dangling pointers.
 
 #[allow(unused_imports)]
 #[macro_use]
@@ -523,6 +522,10 @@ where
 
     /// Gets the value of the array at the given index.
     ///
+    /// # Panics
+    ///
+    /// Panics if the index is out of bounds.
+    ///
     /// # Examples
     ///
     /// ```
@@ -540,6 +543,10 @@ where
     }
 
     /// Sets the value of the array at the given index.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the index is out of bounds.
     ///
     /// # Examples
     ///
@@ -562,6 +569,10 @@ where
 
     /// Updates the value of the array at the given index using the given update function.
     ///
+    /// # Panics
+    ///
+    /// Panics if the index is out of bounds.
+    ///
     /// # Examples
     ///
     /// ```
@@ -582,6 +593,10 @@ where
     }
 
     /// Swaps the two values at the given indices of the array in memory.
+    ///
+    /// # Panics
+    ///
+    /// Panics if either of the indices are out of bounds.
     ///
     /// # Examples
     ///
