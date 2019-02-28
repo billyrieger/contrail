@@ -1,8 +1,10 @@
 # contrail
 
-[![Crate version](https://img.shields.io/crates/v/contrail.svg)](https://crates.io/crates/contrail)
+[![Version](https://img.shields.io/crates/v/contrail.svg)](https://crates.io/crates/contrail)
 [![Documentation](https://docs.rs/contrail/badge.svg)](https://docs.rs/contrail)
 [![License](https://img.shields.io/github/license/billyrieger/contrail.svg)](https://github.com/billyrieger/contrail/blob/master/LICENSE)
+[![Dependency status](https://deps.rs/repo/github/billyrieger/contrail/status.svg)](https://deps.rs/repo/github/billyrieger/contrail)
+[![Rust version](https://img.shields.io/badge/rust-stable-lightgrey.svg)](https://www.rust-lang.org/)
 
 Simple state restoration for backtracking search algorithms using a trail.
 
