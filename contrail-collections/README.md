@@ -1,8 +1,9 @@
 # contrail-collections
 
-[![Crate version](https://img.shields.io/crates/v/contrail.svg)](https://crates.io/crates/contrail-collections)
+[![Version](https://img.shields.io/crates/v/contrail-collections.svg)](https://crates.io/crates/contrail-collections)
 [![Documentation](https://docs.rs/contrail-collections/badge.svg)](https://docs.rs/contrail-collections)
-[![License](https://img.shields.io/github/license/billyrieger/contrail.svg)](https://github.com/billyrieger/contrail/blob/master/LICENSE)
+[![License](https://img.shields.io/crates/l/contrail-collections.svg)](https://github.com/billyrieger/contrail/blob/master/LICENSE)
+[![Rust version](https://img.shields.io/badge/rust-stable-lightgrey.svg)](https://www.rust-lang.org/)
 
 Collections built on top of `contrail`.
 
@@ -10,8 +11,8 @@ Collections built on top of `contrail`.
 
 To use `contrail-collections`, add the following to your `Cargo.toml`:
 
-```
-contrail = "0.1"
+```toml
+contrail-collections = "0.1"
 ```
 
 See [the documentation](https://docs.rs/contrail) for API usage.

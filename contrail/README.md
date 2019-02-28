@@ -11,7 +11,7 @@ Simple state restoration for backtracking search algorithms using a trail.
 
 To use `contrail`, add the following to your `Cargo.toml`:
 
-```
+```toml
 contrail = "0.2"
 ```
 
