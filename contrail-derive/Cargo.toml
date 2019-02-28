@@ -1,8 +1,18 @@
 [package]
 name = "contrail-derive"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Billy Rieger <wrieger@protonmail.com>"]
+description = "Custom derive for contrail."
+license = "MPL-2.0"
 edition = "2018"
+categories = ["algorithms", "memory-management"]
+keywords = ["search", "state", "restoration", "memory", "trail"]
+edition = "2018"
+
+# urls
+homepage = "https://github.com/billyrieger/contrail/tree/master/contrail-derive"
+repository = "https://github.com/billyrieger/contrail"
+readme = "README.md"
 
 [lib]
 proc-macro = true
