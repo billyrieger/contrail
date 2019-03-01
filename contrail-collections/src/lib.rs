@@ -4,7 +4,7 @@
  * obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//! Collections for `contrail`.
+//! Collections built on top of `contrail`.
 
 pub mod bit_set;
 pub mod linked_list;

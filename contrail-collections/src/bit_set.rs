@@ -29,6 +29,23 @@ impl<M> BitSet<M>
 where
     M: StorageMode,
 {
+    /// Creates a new bit set with a capacity of `len` with the values `0..len` in the set.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use contrail::TrailBuilder;
+    /// use contrail_collections::bit_set::BacktrackableBitSet;
+    ///
+    /// let mut builder = TrailBuilder::new();
+    /// let bit_set = BacktrackableBitSet::new_full(&mut builder, 100);
+    /// let trail = builder.finish();
+    ///
+    /// assert_eq!(bit_set.capacity(), 100);
+    /// for i in 0..100 {
+    ///     assert!(bit_set.contains(&trail, i));
+    /// }
+    /// ```
     pub fn new_full(builder: &mut TrailBuilder, len: u64) -> Self {
         assert!(len > 0);
         let max = len - 1;
@@ -37,6 +54,23 @@ where
         Self { blocks, max }
     }
 
+    /// Creates a new bit set with a capacity of `len` with no values in the set.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use contrail::TrailBuilder;
+    /// use contrail_collections::bit_set::BacktrackableBitSet;
+    ///
+    /// let mut builder = TrailBuilder::new();
+    /// let bit_set = BacktrackableBitSet::new_empty(&mut builder, 100);
+    /// let trail = builder.finish();
+    ///
+    /// assert_eq!(bit_set.capacity(), 100);
+    /// for i in 0..100 {
+    ///     assert!(!bit_set.contains(&trail, i));
+    /// }
+    /// ```
     pub fn new_empty(builder: &mut TrailBuilder, len: u64) -> Self {
         assert!(len > 0);
         let max = len - 1;
@@ -45,16 +79,66 @@ where
         Self { blocks, max }
     }
 
+    /// Returns the capacity of the bit set.
+    ///
+    /// The bit set can store elements in the range `0..capacity`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use contrail::TrailBuilder;
+    /// use contrail_collections::bit_set::BacktrackableBitSet;
+    ///
+    /// let mut builder = TrailBuilder::new();
+    /// let bit_set = BacktrackableBitSet::new_empty(&mut builder, 100);
+    /// let trail = builder.finish();
+    ///
+    /// assert_eq!(bit_set.capacity(), 100);
+    /// ```
+    pub fn capacity(&self) -> u64 {
+        self.max + 1
+    }
+
+    /// Removes all elements from the bit set.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use contrail::TrailBuilder;
+    /// use contrail_collections::bit_set::BacktrackableBitSet;
+    ///
+    /// let mut builder = TrailBuilder::new();
+    /// let bit_set = BacktrackableBitSet::new_empty(&mut builder, 100);
+    /// let mut trail = builder.finish();
+    ///
+    /// bit_set.insert(&mut trail, 42);
+    /// assert!(bit_set.contains(&trail, 42));
+    ///
+    /// bit_set.clear(&mut trail);
+    /// assert!(!bit_set.contains(&trail, 42));
+    /// ```
     pub fn clear(&self, trail: &mut Trail) {
         for i in 0..self.blocks.len() {
             self.blocks.set(trail, i, 0);
         }
     }
 
-    pub fn capacity(&self) -> u64 {
-        self.max + 1
-    }
-
+    /// Inserts an element in the bit set.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use contrail::TrailBuilder;
+    /// use contrail_collections::bit_set::BacktrackableBitSet;
+    ///
+    /// let mut builder = TrailBuilder::new();
+    /// let bit_set = BacktrackableBitSet::new_empty(&mut builder, 100);
+    /// let mut trail = builder.finish();
+    ///
+    /// assert!(!bit_set.contains(&trail, 42));
+    /// bit_set.insert(&mut trail, 42);
+    /// assert!(bit_set.contains(&trail, 42));
+    /// ```
     pub fn insert(&self, trail: &mut Trail, value: u64) {
         if value <= self.max {
             let index = (value / BLOCK_SIZE) as usize;
@@ -64,6 +148,22 @@ where
         }
     }
 
+    /// Checks if the bit set contains the given element.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use contrail::TrailBuilder;
+    /// use contrail_collections::bit_set::BacktrackableBitSet;
+    ///
+    /// let mut builder = TrailBuilder::new();
+    /// let bit_set = BacktrackableBitSet::new_empty(&mut builder, 100);
+    /// let mut trail = builder.finish();
+    ///
+    /// assert!(!bit_set.contains(&trail, 42));
+    /// bit_set.insert(&mut trail, 42);
+    /// assert!(bit_set.contains(&trail, 42));
+    /// ```
     pub fn contains(&self, trail: &Trail, value: u64) -> bool {
         if value > self.max {
             false
@@ -74,6 +174,24 @@ where
         }
     }
 
+    /// Removes the given element from the bit set.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use contrail::TrailBuilder;
+    /// use contrail_collections::bit_set::BacktrackableBitSet;
+    ///
+    /// let mut builder = TrailBuilder::new();
+    /// let bit_set = BacktrackableBitSet::new_empty(&mut builder, 100);
+    /// let mut trail = builder.finish();
+    ///
+    /// bit_set.insert(&mut trail, 42);
+    /// assert!(bit_set.contains(&trail, 42));
+    ///
+    /// bit_set.remove(&mut trail, 42);
+    /// assert!(!bit_set.contains(&trail, 42));
+    /// ```
     pub fn remove(&self, trail: &mut Trail, value: u64) {
         if value <= self.max {
             let index = (value / BLOCK_SIZE) as usize;
@@ -83,6 +201,25 @@ where
         }
     }
 
+    /// Counts the number of elements in the bitset between the two given values (inclusive).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use contrail::TrailBuilder;
+    /// use contrail_collections::bit_set::BacktrackableBitSet;
+    ///
+    /// let mut builder = TrailBuilder::new();
+    /// let bit_set = BacktrackableBitSet::new_empty(&mut builder, 100);
+    /// let mut trail = builder.finish();
+    ///
+    /// bit_set.insert(&mut trail, 10);
+    /// bit_set.insert(&mut trail, 20);
+    /// bit_set.insert(&mut trail, 30);
+    ///
+    /// assert_eq!(bit_set.count_between(&trail, 10, 30), 3);
+    /// assert_eq!(bit_set.count_between(&trail, 11, 29), 1);
+    /// ```
     pub fn count_between(&self, trail: &Trail, min: u64, max: u64) -> u64 {
         if min <= max && min <= self.max {
             let max = max.min(self.max);
@@ -113,6 +250,24 @@ where
         }
     }
 
+    /// Returns the next element above the given element in the bit set, or `None` if no such
+    /// element exists.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use contrail::TrailBuilder;
+    /// use contrail_collections::bit_set::BacktrackableBitSet;
+    ///
+    /// let mut builder = TrailBuilder::new();
+    /// let bit_set = BacktrackableBitSet::new_empty(&mut builder, 100);
+    /// let mut trail = builder.finish();
+    ///
+    /// bit_set.insert(&mut trail, 42);
+    ///
+    /// assert_eq!(bit_set.next_above(&trail, 33), Some(42));
+    /// assert_eq!(bit_set.next_above(&trail, 50), None);
+    /// ```
     pub fn next_above(&self, trail: &Trail, value: u64) -> Option<u64> {
         if value > self.max {
             None
@@ -131,6 +286,24 @@ where
         }
     }
 
+    /// Returns the next element below the given element in the bit set, or `None` if no such
+    /// element exists.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use contrail::TrailBuilder;
+    /// use contrail_collections::bit_set::BacktrackableBitSet;
+    ///
+    /// let mut builder = TrailBuilder::new();
+    /// let bit_set = BacktrackableBitSet::new_empty(&mut builder, 100);
+    /// let mut trail = builder.finish();
+    ///
+    /// bit_set.insert(&mut trail, 42);
+    ///
+    /// assert_eq!(bit_set.next_below(&trail, 50), Some(42));
+    /// assert_eq!(bit_set.next_below(&trail, 33), None);
+    /// ```
     pub fn next_below(&self, trail: &Trail, value: u64) -> Option<u64> {
         let value = value.min(self.max);
         let block = value / BLOCK_SIZE;
