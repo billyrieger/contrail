@@ -399,10 +399,14 @@ impl<M, T> Clone for Value<M, T> {
 
 impl<M, T> Copy for Value<M, T> {}
 
-impl<M, T> fmt::Debug for Value<M, T> {
+impl<M, T> fmt::Debug for Value<M, T>
+where
+    M: StorageMode,
+{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Value")
             .field("pointer", &self.pointer)
+            .field("storage_mode", &M::default())
             .finish()
     }
 }
@@ -632,10 +636,14 @@ impl<M, T> Clone for Array<M, T> {
 
 impl<M, T> Copy for Array<M, T> {}
 
-impl<M, T> fmt::Debug for Array<M, T> {
+impl<M, T> fmt::Debug for Array<M, T>
+where
+    M: StorageMode,
+{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Array")
             .field("pointer", &self.pointer)
+            .field("storage_mode", &M::default())
             .finish()
     }
 }
@@ -695,11 +703,16 @@ mod tests {
         #[test]
         fn debug() {
             let mut builder = TrailBuilder::new();
-            let value = BacktrackableValue::new(&mut builder, 42);
+            let backtrackable = BacktrackableValue::new(&mut builder, 42);
+            let non_backtrackable = NonBacktrackableValue::new(&mut builder, 42);
 
             assert_eq!(
-                format!("{:?}", value),
-                "Value { pointer: Pointer { offset: 0 } }"
+                format!("{:?}", backtrackable),
+                "Value { pointer: Pointer { offset: 0 }, storage_mode: Backtrackable }"
+            );
+            assert_eq!(
+                format!("{:?}", non_backtrackable),
+                "Value { pointer: Pointer { offset: 0 }, storage_mode: NonBacktrackable }"
             );
         }
 
@@ -768,11 +781,16 @@ mod tests {
         #[test]
         fn debug() {
             let mut builder = TrailBuilder::new();
-            let array = BacktrackableArray::new(&mut builder, vec![1, 2, 3, 4]);
+            let backtrackable = BacktrackableArray::new(&mut builder, vec![1, 2, 3, 4]);
+            let non_backtrackable = NonBacktrackableArray::new(&mut builder, vec![1, 2, 3, 4]);
 
             assert_eq!(
-                format!("{:?}", array),
-                "Array { pointer: ArrayPointer { offset: 0, len: 4 } }"
+                format!("{:?}", backtrackable),
+                "Array { pointer: ArrayPointer { offset: 0, len: 4 }, storage_mode: Backtrackable }"
+            );
+            assert_eq!(
+                format!("{:?}", non_backtrackable),
+                "Array { pointer: ArrayPointer { offset: 0, len: 4 }, storage_mode: NonBacktrackable }"
             );
         }
 

@@ -4,10 +4,13 @@
  * obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+//! Sparse sets.
+
 use contrail::{
     storage::{Backtrackable, NonBacktrackable, StorageMode},
     NonBacktrackableArray, Trail, TrailBuilder, Value,
 };
+use std::fmt;
 
 /// A sparse set stored on the trail in backtrackable memory.
 pub type BacktrackableSparseSet = SparseSet<Backtrackable>;
@@ -18,7 +21,7 @@ pub type NonBacktrackableSparseSet = SparseSet<NonBacktrackable>;
 /// A specialized backtrackable data structure for storing subsets of the range `0..n` that can
 /// only decrease in size.
 ///
-/// Features O(1) `contains` and `remove` as well as fast value iteration.
+/// Features O(1) `contains()` and `remove()` as well as fast value iteration.
 pub struct SparseSet<M> {
     values: NonBacktrackableArray<usize>,
     positions: NonBacktrackableArray<usize>,
@@ -264,10 +267,47 @@ impl<M> Clone for SparseSet<M> {
 
 impl<M> Copy for SparseSet<M> {}
 
+impl<M> fmt::Debug for SparseSet<M>
+where
+    M: StorageMode,
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("SparseSet")
+            .field("values", &self.values)
+            .field("positions", &self.positions)
+            .field("len", &self.len)
+            .finish()
+    }
+}
+
+impl<M> Eq for SparseSet<M> {}
+
+impl<M> PartialEq for SparseSet<M> {
+    fn eq(&self, other: &Self) -> bool {
+        self.values == other.values && self.positions == other.positions && self.len == other.len
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
     use contrail::TrailBuilder;
+
+    #[test]
+    fn clone_eq() {
+        let mut builder = TrailBuilder::new();
+        let sparse_set = BacktrackableSparseSet::new_full(&mut builder, 10);
+
+        let clone = sparse_set.clone();
+        assert_eq!(sparse_set, clone);
+    }
+
+    #[test]
+    fn debug() {
+        let mut builder = TrailBuilder::new();
+        let sparse_set = BacktrackableSparseSet::new_full(&mut builder, 10);
+        assert_eq!(format!("{:?}", sparse_set), "SparseSet { values: Array { pointer: ArrayPointer { offset: 0, len: 10 }, storage_mode: NonBacktrackable }, positions: Array { pointer: ArrayPointer { offset: 80, len: 10 }, storage_mode: NonBacktrackable }, len: Value { pointer: Pointer { offset: 0 }, storage_mode: Backtrackable } }");
+    }
 
     #[test]
     fn iter() {

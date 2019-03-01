@@ -6,6 +6,7 @@
 
 //! High-level memory management.
 use crate::{Memory, MemoryBuilder, Trail, TrailBuilder};
+use std::fmt;
 
 /// Representation of how something is stored on the trail.
 ///
@@ -13,7 +14,7 @@ use crate::{Memory, MemoryBuilder, Trail, TrailBuilder};
 /// [`Backtrackable`](Backtrackable) and [`NonBacktrackable`](NonBacktrackable), respectively. Both
 /// of these structs implement `StorageMode`. See the documentation for [`Trail`](Trail) for the
 /// difference between backtrackable and non-backtrackable storage.
-pub trait StorageMode {
+pub trait StorageMode: fmt::Debug + Default {
     /// Returns the associated `MemoryBuilder` from a `TrailBuilder`.
     fn builder_mut(builder: &mut TrailBuilder) -> &mut MemoryBuilder;
 
@@ -51,7 +52,7 @@ pub trait StorageMode {
 ///
 /// assert_eq!(backtrackable_counter.get(&trail), 0);
 /// ```
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Backtrackable;
 
 impl StorageMode for Backtrackable {
@@ -98,7 +99,7 @@ impl StorageMode for Backtrackable {
 ///
 /// assert_eq!(non_backtrackable_counter.get(&trail), 1);
 /// ```
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct NonBacktrackable;
 
 impl StorageMode for NonBacktrackable {
