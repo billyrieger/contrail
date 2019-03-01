@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Billy Rieger <wrieger@protonmail.com>"]
 description = "Custom derive for contrail."
 license = "MPL-2.0"
-categories = ["algorithms", "memory-management"]
+categories = ["memory-management"]
 keywords = ["search", "state", "restoration", "memory", "trail"]
 edition = "2018"
 

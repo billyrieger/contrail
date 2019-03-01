@@ -1,6 +1,6 @@
 [package]
 name = "contrail-collections"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Billy Rieger <wrieger@protonmail.com>"]
 description = "Collections built on top of contrail."
 license = "MPL-2.0"
@@ -14,7 +14,4 @@ repository = "https://github.com/billyrieger/contrail"
 readme = "README.md"
 
 [dependencies]
-contrail = { path = "../contrail/" }
-
-[dev-dependencies]
-version-sync = "0.7"
+contrail = { path = "../contrail", version = "0.2" }
