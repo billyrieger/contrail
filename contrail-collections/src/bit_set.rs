@@ -4,6 +4,8 @@
  * obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+//! Bit sets.
+
 use contrail::{
     storage::{Backtrackable, NonBacktrackable, StorageMode},
     Array, Trail, TrailBuilder,
@@ -11,14 +13,17 @@ use contrail::{
 
 const BLOCK_SIZE: u64 = 64;
 
+/// A bit set stored in backtrackable storage on the trail.
+pub type BacktrackableBitSet = BitSet<Backtrackable>;
+/// A bit set stored in non-backtrackable storage on the trail.
+pub type NonBacktrackableBitSet = BitSet<NonBacktrackable>;
+
+/// A bit set.
 #[derive(Clone, Copy)]
 pub struct BitSet<M> {
     blocks: Array<M, u64>,
     max: u64,
 }
-
-pub type BacktrackableBitSet = BitSet<Backtrackable>;
-pub type NonBacktrackableBitSet = BitSet<NonBacktrackable>;
 
 impl<M> BitSet<M>
 where
@@ -46,7 +51,7 @@ where
         }
     }
 
-    pub fn len(&self) -> u64 {
+    pub fn capacity(&self) -> u64 {
         self.max + 1
     }
 
@@ -140,6 +145,111 @@ where
             }
         } else {
             Some((value - to_skip) as u64)
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new() {
+        let mut builder = TrailBuilder::new();
+        let empty = BacktrackableBitSet::new_empty(&mut builder, 10);
+        let full = BacktrackableBitSet::new_full(&mut builder, 10);
+        let trail = builder.finish();
+        
+        assert_eq!(empty.capacity(), 10);
+        assert_eq!(full.capacity(), 10);
+
+        for i in 0..10 {
+            assert!(!empty.contains(&trail, i));
+            assert!(full.contains(&trail, i));
+        }
+    }
+
+    #[test]
+    fn clear() {
+        let mut builder = TrailBuilder::new();
+        let bit_set = BacktrackableBitSet::new_full(&mut builder, 100);
+        let mut trail = builder.finish();
+
+        for i in 0..100 {
+            assert!(bit_set.contains(&trail, i));
+        }
+
+        bit_set.clear(&mut trail);
+
+        for i in 0..100 {
+            assert!(!bit_set.contains(&trail, i));
+        }
+    }
+
+    #[test]
+    fn insert_remove_contains() {
+        let mut builder = TrailBuilder::new();
+        let bit_set = BacktrackableBitSet::new_empty(&mut builder, 10);
+        let mut trail = builder.finish();
+
+        assert!(!bit_set.contains(&trail, 100));
+        
+        for i in 0..10 {
+            assert!(!bit_set.contains(&trail, i));
+            bit_set.insert(&mut trail, i);
+            assert!(bit_set.contains(&trail, i));
+            bit_set.remove(&mut trail, i);
+            assert!(!bit_set.contains(&trail, i));
+        }
+    }
+
+    #[test]
+    fn count_between() {
+        let mut builder = TrailBuilder::new();
+        let small = BacktrackableBitSet::new_full(&mut builder, 10);
+        let medium = BacktrackableBitSet::new_full(&mut builder, 100);
+        let large = BacktrackableBitSet::new_full(&mut builder, 1000);
+        let trail = builder.finish();
+
+        assert_eq!(small.count_between(&trail, 0, 9), 10);
+        assert_eq!(small.count_between(&trail, 1, 8), 8);
+        assert_eq!(small.count_between(&trail, 5, 5), 1);
+        assert_eq!(small.count_between(&trail, 6, 5), 0);
+
+        assert_eq!(medium.count_between(&trail, 0, 99), 100);
+        assert_eq!(medium.count_between(&trail, 1, 98), 98);
+        assert_eq!(medium.count_between(&trail, 50, 50), 1);
+        assert_eq!(medium.count_between(&trail, 51, 50), 0);
+
+        assert_eq!(large.count_between(&trail, 0, 999), 1000);
+        assert_eq!(large.count_between(&trail, 1, 998), 998);
+        assert_eq!(large.count_between(&trail, 500, 500), 1);
+        assert_eq!(large.count_between(&trail, 501, 500), 0);
+    }
+
+    #[test]
+    fn next_above_below() {
+        let mut builder = TrailBuilder::new();
+        let bit_set = BacktrackableBitSet::new_empty(&mut builder, 1000);
+        let mut trail = builder.finish();
+
+        for i in 1..10 {
+            bit_set.insert(&mut trail, i * 100);
+        }
+
+        for i in 0..100 {
+            assert_eq!(bit_set.next_below(&trail, i), None);
+            assert_eq!(bit_set.next_above(&trail, i), Some(100));
+        }
+
+        for i in 401..500 {
+            assert_eq!(bit_set.next_below(&trail, i), Some(400));
+            assert_eq!(bit_set.next_above(&trail, i), Some(500));
+        }
+
+        for i in 901..1000 {
+            assert_eq!(bit_set.next_below(&trail, i), Some(900));
+            assert_eq!(bit_set.next_above(&trail, i), None);
         }
     }
 }

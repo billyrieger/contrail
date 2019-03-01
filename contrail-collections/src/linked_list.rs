@@ -429,6 +429,90 @@ mod tests {
             let node_clone = node.clone();
             assert_eq!(node, node_clone);
         }
+
+        #[test]
+        fn get_set_data() {
+            let mut builder = TrailBuilder::new();
+            let arena = BacktrackableLinkedListArena::new(&mut builder, (10..15).collect());
+            let mut trail = builder.finish();
+
+            let node = arena.node(3);
+            assert_eq!(node.data(&trail), 13);
+
+            node.set_data(&mut trail, 23);
+            assert_eq!(node.data(&trail), 23);
+        }
+
+        #[test]
+        fn unlink() {
+            let mut builder = TrailBuilder::new();
+            let arena =
+                NonBacktrackableLinkedListArena::new(&mut builder, (0..2).map(|_| ()).collect());
+            let mut trail = builder.finish();
+
+            let a = arena.node(0);
+            let b = arena.node(1);
+
+            a.insert_before(&mut trail, b);
+
+            assert_eq!(a.next(&trail).index, b.index);
+            assert_eq!(a.prev(&trail).index, b.index);
+            assert_eq!(b.next(&trail).index, a.index);
+            assert_eq!(b.prev(&trail).index, a.index);
+
+            b.unlink(&mut trail);
+
+            assert_eq!(a.next(&trail).index, a.index);
+            assert_eq!(a.prev(&trail).index, a.index);
+            assert_eq!(b.next(&trail).index, b.index);
+            assert_eq!(b.prev(&trail).index, b.index);
+        }
+
+        #[test]
+        fn insert_after() {
+            let mut builder = TrailBuilder::new();
+            let arena =
+                NonBacktrackableLinkedListArena::new(&mut builder, (0..3).map(|_| ()).collect());
+            let mut trail = builder.finish();
+
+            let a = arena.node(0);
+            let b = arena.node(1);
+            let c = arena.node(2);
+
+            b.insert_after(&mut trail, a);
+            c.insert_after(&mut trail, b);
+
+            assert_eq!(a.next(&trail).index, b.index);
+            assert_eq!(b.next(&trail).index, c.index);
+            assert_eq!(c.next(&trail).index, a.index);
+
+            assert_eq!(a.prev(&trail).index, c.index);
+            assert_eq!(c.prev(&trail).index, b.index);
+            assert_eq!(b.prev(&trail).index, a.index);
+        }
+
+        #[test]
+        fn insert_before() {
+            let mut builder = TrailBuilder::new();
+            let arena =
+                NonBacktrackableLinkedListArena::new(&mut builder, (0..3).map(|_| ()).collect());
+            let mut trail = builder.finish();
+
+            let a = arena.node(0);
+            let b = arena.node(1);
+            let c = arena.node(2);
+
+            b.insert_before(&mut trail, a);
+            c.insert_before(&mut trail, b);
+
+            assert_eq!(c.next(&trail).index, b.index);
+            assert_eq!(b.next(&trail).index, a.index);
+            assert_eq!(a.next(&trail).index, c.index);
+
+            assert_eq!(c.prev(&trail).index, a.index);
+            assert_eq!(a.prev(&trail).index, b.index);
+            assert_eq!(b.prev(&trail).index, c.index);
+        }
     }
 
     mod arena {
@@ -454,89 +538,15 @@ mod tests {
             assert_eq!(arena.node(1), arena_clone.node(1));
         }
 
-    }
+        #[test]
+        #[should_panic]
+        fn out_of_bounds() {
+            let mut builder = TrailBuilder::new();
+            let arena =
+                BacktrackableLinkedListArena::new(&mut builder, vec![(); 3]);
 
-    #[test]
-    fn get_set_data() {
-        let mut builder = TrailBuilder::new();
-        let arena = BacktrackableLinkedListArena::new(&mut builder, (10..15).collect());
-        let mut trail = builder.finish();
-
-        let node = arena.node(3);
-        assert_eq!(node.data(&trail), 13);
-
-        node.set_data(&mut trail, 23);
-        assert_eq!(node.data(&trail), 23);
-    }
-
-    #[test]
-    fn unlink() {
-        let mut builder = TrailBuilder::new();
-        let arena =
-            NonBacktrackableLinkedListArena::new(&mut builder, (0..2).map(|_| ()).collect());
-        let mut trail = builder.finish();
-
-        let a = arena.node(0);
-        let b = arena.node(1);
-
-        a.insert_before(&mut trail, b);
-
-        assert_eq!(a.next(&trail).index, b.index);
-        assert_eq!(a.prev(&trail).index, b.index);
-        assert_eq!(b.next(&trail).index, a.index);
-        assert_eq!(b.prev(&trail).index, a.index);
-
-        b.unlink(&mut trail);
-
-        assert_eq!(a.next(&trail).index, a.index);
-        assert_eq!(a.prev(&trail).index, a.index);
-        assert_eq!(b.next(&trail).index, b.index);
-        assert_eq!(b.prev(&trail).index, b.index);
-    }
-
-    #[test]
-    fn insert_after() {
-        let mut builder = TrailBuilder::new();
-        let arena =
-            NonBacktrackableLinkedListArena::new(&mut builder, (0..3).map(|_| ()).collect());
-        let mut trail = builder.finish();
-
-        let a = arena.node(0);
-        let b = arena.node(1);
-        let c = arena.node(2);
-
-        b.insert_after(&mut trail, a);
-        c.insert_after(&mut trail, b);
-
-        assert_eq!(a.next(&trail).index, b.index);
-        assert_eq!(b.next(&trail).index, c.index);
-        assert_eq!(c.next(&trail).index, a.index);
-
-        assert_eq!(a.prev(&trail).index, c.index);
-        assert_eq!(c.prev(&trail).index, b.index);
-        assert_eq!(b.prev(&trail).index, a.index);
-    }
-
-    #[test]
-    fn insert_before() {
-        let mut builder = TrailBuilder::new();
-        let arena =
-            NonBacktrackableLinkedListArena::new(&mut builder, (0..3).map(|_| ()).collect());
-        let mut trail = builder.finish();
-
-        let a = arena.node(0);
-        let b = arena.node(1);
-        let c = arena.node(2);
-
-        b.insert_before(&mut trail, a);
-        c.insert_before(&mut trail, b);
-
-        assert_eq!(c.next(&trail).index, b.index);
-        assert_eq!(b.next(&trail).index, a.index);
-        assert_eq!(a.next(&trail).index, c.index);
-
-        assert_eq!(c.prev(&trail).index, a.index);
-        assert_eq!(a.prev(&trail).index, b.index);
-        assert_eq!(b.prev(&trail).index, c.index);
+            assert_eq!(arena.size(), 3);
+            arena.node(3);
+        }
     }
 }
