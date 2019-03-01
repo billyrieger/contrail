@@ -12,7 +12,7 @@ Collections built on top of `contrail`.
 To use `contrail-collections`, add the following to your `Cargo.toml`:
 
 ```toml
-contrail-collections = "0.1"
+contrail-collections = "0.2"
 ```
 
 See [the documentation](https://docs.rs/contrail) for API usage.
