@@ -19,7 +19,6 @@ pub type NonBacktrackableSparseSet = SparseSet<NonBacktrackable>;
 /// only decrease in size.
 ///
 /// Features O(1) `contains` and `remove` as well as fast value iteration.
-#[derive(Clone, Copy, Debug)]
 pub struct SparseSet<M> {
     values: NonBacktrackableArray<usize>,
     positions: NonBacktrackableArray<usize>,
@@ -252,6 +251,18 @@ where
         self.positions.set(trail, val_j, i);
     }
 }
+
+impl<M> Clone for SparseSet<M> {
+    fn clone(&self) -> Self {
+        Self {
+            values: self.values,
+            positions: self.positions,
+            len: self.len,
+        }
+    }
+}
+
+impl<M> Copy for SparseSet<M> {}
 
 #[cfg(test)]
 mod test {
