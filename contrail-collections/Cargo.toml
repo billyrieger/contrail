@@ -1,18 +1,20 @@
 [package]
 name = "contrail-collections"
-version = "0.2.1"
+version = "0.3.0"
 authors = ["Billy Rieger <wrieger@protonmail.com>"]
 description = "Collections built on top of contrail."
 license = "MPL-2.0"
 edition = "2018"
 categories = ["data-structures", "memory-management"]
 keywords = ["search", "state", "restoration", "memory", "trail"]
-maintenance = { status = "deprecated" }
 
 # urls
 homepage = "https://github.com/billyrieger/contrail/tree/master/contrail-collections"
 repository = "https://github.com/billyrieger/contrail"
 readme = "README.md"
 
+[badges]
+maintenance = { status = "deprecated" }
+
 [dependencies]
-contrail = { path = "../contrail", version = "0.2" }
+contrail = { path = "../contrail", version = "0.3" }
