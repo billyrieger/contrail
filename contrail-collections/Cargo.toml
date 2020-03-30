@@ -7,6 +7,7 @@ license = "MPL-2.0"
 edition = "2018"
 categories = ["data-structures", "memory-management"]
 keywords = ["search", "state", "restoration", "memory", "trail"]
+maintenance = { status = "deprecated" }
 
 # urls
 homepage = "https://github.com/billyrieger/contrail/tree/master/contrail-collections"
