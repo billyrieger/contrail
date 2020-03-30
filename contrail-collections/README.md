@@ -1,3 +1,5 @@
+### ⚠️⚠️⚠️ This project is no longer maintained. ⚠️⚠️⚠️
+
 # contrail-collections
 
 [![Version](https://img.shields.io/crates/v/contrail-collections.svg)](https://crates.io/crates/contrail-collections)
