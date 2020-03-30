@@ -1,3 +1,5 @@
+### ⚠️⚠️⚠️ This project is no longer maintained. ⚠️⚠️⚠️
+
 # contrail-derive
 
 [![Version](https://img.shields.io/crates/v/contrail-derive.svg)](https://crates.io/crates/contrail-derive)
