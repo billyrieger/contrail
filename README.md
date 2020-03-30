@@ -1,3 +1,5 @@
+### ⚠️⚠️⚠️ This project is no longer maintained. ⚠️⚠️⚠️
+
 # contrail
 
 [![Build status](https://api.travis-ci.com/billyrieger/contrail.svg)](https://travis-ci.com/billyrieger/contrail)
